@@ -19,12 +19,9 @@ public class TwilioConfig {
 
     @PostConstruct
     public void init() {
-        System.out.println("Twilio Account SID: " + accountSid);
         System.out.println("Twilio Auth Token present: "
                 + (authToken != null && !authToken.isBlank()));
         System.out.println("Twilio Service SID: " + serviceSid);
-        System.out.println("Twilio Service configuration loaded");
-        System.out.println("=================================");
 
         Twilio.init(accountSid, authToken);
     }
