@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Blood Centre Registration</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            width: 500px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 12px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #b71c1c;
+        }
+
+        #otpSection {
+            margin-top: 25px;
+        }
+
+        #message {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h2>Blood Centre Registration</h2>
+
+
+    <form id="registerForm">
+
+        <label>
+            Blood Centre Name
+        </label>
+
+        <input
+                type="text"
+                id="bloodCentreName"
+                required
+        >
+
+
+        <label>
+            License Number
+        </label>
+
+        <input
+                type="text"
+                id="licenseNumber"
+                required
+        >
+
+
+        <label>
+            Mobile Number
+        </label>
+
+        <input
+                type="text"
+                id="mobileNumber"
+                maxlength="10"
+                required
+        >
+
+
+        <label>
+            Email
+        </label>
+
+        <input
+                type="email"
+                id="email"
+                required
+        >
+
+
+        <label>
+            Password
+        </label>
+
+        <input
+                type="password"
+                id="password"
+                required
+        >
+
+
+        <label>
+            Confirm Password
+        </label>
+
+        <input
+                type="password"
+                id="confirmPassword"
+                required
+        >
+
+
+        <label>
+            Address
+        </label>
+
+        <input
+                type="text"
+                id="address"
+                required
+        >
+
+
+        <label>
+            Pin Code
+        </label>
+
+        <input
+                type="text"
+                id="pincode"
+                maxlength="6"
+                required
+        >
+
+
+        <button type="submit">
+            Register
+        </button>
+
+    </form>
+
+
+    <!-- OTP -->
+
+    <div id="otpSection"
+         style="display:none;">
+
+        <h3>Mobile OTP Verification</h3>
+
+        <input
+                type="text"
+                id="otp"
+                maxlength="6"
+                placeholder="Enter 6 digit OTP"
+        >
+
+        <button
+                type="button"
+                onclick="verifyOtp()">
+
+            Verify OTP
+
+        </button>
+
+    </div>
+
+
+    <div id="message"></div>
+
+</div>
+
+
+<script>
+
+    let registrationData = null;
+
+
+    // ======================================
+    // REGISTER BUTTON
+    // ======================================
+
+    document
+        .getElementById("registerForm")
+        .addEventListener(
+            "submit",
+            async function(event) {
+
+                event.preventDefault();
+
+
+                registrationData = {
+
+                    bloodCentreName:
+                        document
+                            .getElementById(
+                                "bloodCentreName"
+                            ).value,
+
+                    licenseNumber:
+                        document
+                            .getElementById(
+                                "licenseNumber"
+                            ).value,
+
+                    mobileNumber:
+                        document
+                            .getElementById(
+                                "mobileNumber"
+                            ).value,
+
+                    email:
+                        document
+                            .getElementById(
+                                "email"
+                            ).value,
+
+                    password:
+                        document
+                            .getElementById(
+                                "password"
+                            ).value,
+
+                    confirmPassword:
+                        document
+                            .getElementById(
+                                "confirmPassword"
+                            ).value,
+
+                    address:
+                        document
+                            .getElementById(
+                                "address"
+                            ).value,
+
+                    pincode:
+                        document
+                            .getElementById(
+                                "pincode"
+                            ).value
+                };
+
+
+                // Password validation
+
+                if (
+                    registrationData.password !==
+                    registrationData.confirmPassword
+                ) {
+
+                    document.getElementById(
+                        "message"
+                    ).innerText =
+                        "Passwords do not match.";
+
+                    return;
+                }
+
+
+                try {
+
+                    // ==================================
+                    // SEND OTP
+                    // ==================================
+
+                    const response =
+                        await fetch(
+                            `http://localhost:8080/api/v1/otp/send?mobileNumber=${
+                                encodeURIComponent(
+                                    registrationData.mobileNumber
+                                )
+                            }`,
+                            {
+                                method: "POST"
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        document.getElementById(
+                            "message"
+                        ).innerText =
+                            data.message ||
+                            "Failed to send OTP.";
+
+                        return;
+                    }
+
+
+                    document.getElementById(
+                        "message"
+                    ).innerText =
+                        "OTP sent successfully.";
+
+
+                    document.getElementById(
+                        "otpSection"
+                    ).style.display = "block";
+
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    document.getElementById(
+                        "message"
+                    ).innerText =
+                        "Failed to send OTP.";
+                }
+
+            }
+        );
+
+
+    // ======================================
+    // VERIFY OTP
+    // ======================================
+
+    async function verifyOtp() {
+
+        const otp =
+            document
+                .getElementById("otp")
+                .value;
+
+
+        if (!otp || otp.length !== 6) {
+
+            document.getElementById(
+                "message"
+            ).innerText =
+                "Please enter a valid 6-digit OTP.";
+
+            return;
+        }
+
+
+        try {
+
+            // ==================================
+            // VERIFY OTP API
+            // ==================================
+
+            const response =
+                await fetch(
+                    `http://localhost:8080/api/v1/otp/verify?mobileNumber=${
+                        encodeURIComponent(
+                            registrationData.mobileNumber
+                        )
+                    }&otp=${
+                        encodeURIComponent(otp)
+                    }`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                document.getElementById(
+                    "message"
+                ).innerText =
+                    data.message ||
+                    "Invalid OTP.";
+
+                return;
+            }
+
+
+            document.getElementById(
+                "message"
+            ).innerText =
+                "OTP verified. Registering...";
+
+
+            // ==================================
+            // REGISTER BLOOD CENTRE
+            // ==================================
+
+            const registerResponse =
+                await fetch(
+                    "http://localhost:8080/api/v1/blood-centres/register",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                registrationData
+                            )
+                    }
+                );
+
+
+            const registerData =
+                await registerResponse.json();
+
+
+            if (!registerResponse.ok) {
+
+                document.getElementById(
+                    "message"
+                ).innerText =
+                    registerData.message ||
+                    "Registration failed.";
+
+                return;
+            }
+
+
+            document.getElementById(
+                "message"
+            ).innerText =
+                "Registration successful!";
+
+
+            document.getElementById(
+                "registerForm"
+            ).reset();
+
+
+            document.getElementById(
+                "otpSection"
+            ).style.display = "none";
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            document.getElementById(
+                "message"
+            ).innerText =
+                "Something went wrong.";
+        }
+    }
+
+</script>
+
+</body>
+
+</html>

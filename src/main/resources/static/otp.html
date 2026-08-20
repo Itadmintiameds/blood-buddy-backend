@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mobile OTP Verification</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f5f5f5;
+        }
+
+        .container {
+            width: 350px;
+            padding: 25px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #d32f2f;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #b71c1c;
+        }
+
+        #otpSection {
+            display: none;
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Mobile OTP Verification</h2>
+
+    <!-- Mobile Number -->
+    <div id="mobileSection">
+
+        <input
+                type="text"
+                id="mobileNumber"
+                placeholder="Enter mobile number"
+                maxlength="10">
+
+        <button onclick="sendOtp()">
+            Send OTP
+        </button>
+
+    </div>
+
+    <!-- OTP -->
+    <div id="otpSection">
+
+        <input
+                type="text"
+                id="otp"
+                placeholder="Enter OTP"
+                maxlength="6">
+
+        <button onclick="verifyOtp()">
+            Verify OTP
+        </button>
+
+    </div>
+
+    <div id="message"></div>
+
+</div>
+
+
+<script>
+
+    function sendOtp() {
+
+        const mobileNumber =
+            document.getElementById("mobileNumber").value;
+
+        if (!/^[6-9][0-9]{9}$/.test(mobileNumber)) {
+
+            document.getElementById("message").innerText =
+                "Enter a valid mobile number";
+
+            return;
+        }
+
+        fetch(
+            "http://localhost:8080/api/v1/otp/send?mobileNumber="
+            + mobileNumber,
+            {
+                method: "POST"
+            }
+        )
+        .then(response => response.json())
+        .then(data => {
+
+            document.getElementById("message").innerText =
+                data.message;
+
+            if (data.success) {
+
+                document.getElementById("otpSection")
+                    .style.display = "block";
+
+            }
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            document.getElementById("message").innerText =
+                "Failed to send OTP";
+
+        });
+    }
+
+
+    function verifyOtp() {
+
+        const mobileNumber =
+            document.getElementById("mobileNumber").value;
+
+        const otp =
+            document.getElementById("otp").value;
+
+        if (!/^[0-9]{6}$/.test(otp)) {
+
+            document.getElementById("message").innerText =
+                "Enter a valid 6-digit OTP";
+
+            return;
+        }
+
+        fetch(
+            "http://localhost:8080/api/v1/otp/verify"
+            + "?mobileNumber=" + mobileNumber
+            + "&otp=" + otp,
+            {
+                method: "POST"
+            }
+        )
+        .then(response => response.json())
+        .then(data => {
+
+            document.getElementById("message").innerText =
+                data.message;
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            document.getElementById("message").innerText =
+                "OTP verification failed";
+
+        });
+    }
+
+</script>
+
+</body>
+</html>
