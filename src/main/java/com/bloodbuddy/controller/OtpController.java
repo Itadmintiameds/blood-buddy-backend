@@ -1,6 +1,7 @@
 package com.bloodbuddy.controller;
 
 import com.bloodbuddy.dto.OtpRequest;
+import com.bloodbuddy.dto.OtpVerifyRequest;
 import com.bloodbuddy.services.TwilioOtpService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,47 @@ public class OtpController {
                             "success", true,
                             "message", "OTP sent successfully",
                             "status", status
+                    )
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return ResponseEntity.status(500).body(
+                    Map.of(
+                            "success", false,
+                            "message", e.getMessage()
+                    )
+            );
+        }
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyOtp(
+            @Valid @RequestBody OtpVerifyRequest request) {
+
+        try {
+
+            boolean verified = twilioOtpService.verifyOtp(
+                    request.mobileNumber(),
+                    request.otp()
+            );
+
+            if (verified) {
+
+                return ResponseEntity.ok(
+                        Map.of(
+                                "success", true,
+                                "message", "OTP verified successfully"
+                        )
+                );
+            }
+
+            return ResponseEntity.badRequest().body(
+                    Map.of(
+                            "success", false,
+                            "message", "Invalid or expired OTP"
                     )
             );
 
