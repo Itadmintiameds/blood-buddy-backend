@@ -64,8 +64,9 @@ public class BloodCentreService {
                         .toLowerCase()
         );
 
-        bloodCentre.setPassword(request.password());
-        bloodCentre.setPassword(request.password());
+        bloodCentre.setPassword(
+                passwordEncoder.encode(request.password())
+        );
 
         bloodCentre.setAddress(
                 request.address().trim()
