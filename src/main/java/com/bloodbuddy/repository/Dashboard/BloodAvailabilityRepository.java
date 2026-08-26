@@ -2,9 +2,13 @@ package com.bloodbuddy.repository.Dashboard;
 
 import com.bloodbuddy.entity.Dashboard.BloodAvailability;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.CrudRepository;
 
-public interface BloodAvailabilityRepository extends JpaRepository<BloodAvailability, Integer> {
+import java.util.Optional;
+
+public interface BloodAvailabilityRepository
+        extends JpaRepository<BloodAvailability, Long> {
+
+    Optional<BloodAvailability> findByBloodGroup(String bloodGroup);
 
     boolean existsByBloodGroup(String bloodGroup);
 }

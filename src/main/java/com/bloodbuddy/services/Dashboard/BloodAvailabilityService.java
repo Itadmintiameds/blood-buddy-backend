@@ -1,93 +1,78 @@
 package com.bloodbuddy.services.Dashboard;
 
-import com.bloodbuddy.dto.Dashboard.BloodGroupResponse;
-import com.bloodbuddy.dto.Dashboard.DashboardResponse;
+import com.bloodbuddy.dto.Dashboard.BloodAvailabilityRequest;
+import com.bloodbuddy.dto.Dashboard.BloodOverviewRequest;
+import com.bloodbuddy.dto.Dashboard.BloodOverviewResponse;
 import com.bloodbuddy.entity.Dashboard.BloodAvailability;
 import com.bloodbuddy.repository.Dashboard.BloodAvailabilityRepository;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class BloodAvailabilityService {
 
     private final BloodAvailabilityRepository repository;
 
-    // Units <= 3 are considered low stock
-    private static final int LOW_STOCK_LIMIT = 3;
+    public BloodAvailability addAvailability(
+            @Valid BloodAvailabilityRequest request) {
 
-    public BloodAvailabilityService(
-            BloodAvailabilityRepository repository) {
-        this.repository = repository;
+//        if (repository.existsByBloodGroup(
+//                request.bloodGroup().toUpperCase())) {
+//
+//            throw new RuntimeException(
+//                    "Blood group already exists: " + request.bloodGroup()
+//            );
+//        }
+
+        BloodAvailability availability = BloodAvailability.builder()
+                .bloodGroup(request.bloodGroup().toUpperCase())
+                .bloodType(request.bloodType().toUpperCase())
+                .unitsAvailable(request.unitsAvailable())
+                .build();
+
+        return repository.save(availability);
     }
 
-    public DashboardResponse getDashboard() {
+    public BloodAvailability addOverview(BloodOverviewRequest request) {
 
-        List<BloodAvailability> records =
-                repository.findAll();
+        BloodAvailability overview = BloodAvailability.builder()
+                .bloodGroup(request.bloodGroup().toUpperCase())
+                .unitsAvailable(request.unitsAvailable())
+                .build();
 
-        long bloodGroupsListed = records.size();
-
-        int totalUnits = records.stream()
-                .mapToInt(BloodAvailability::getUnits)
-                .sum();
-
-        long lowStockAlerts = records.stream()
-                .filter(b -> b.getUnits() <= LOW_STOCK_LIMIT)
-                .count();
-
-        List<BloodGroupResponse> availability =
-                records.stream()
-                        .map(b -> new BloodGroupResponse(
-                                b.getBloodGroup(),
-                                b.getUnits()))
-                        .toList();
-
-        return new DashboardResponse(
-                bloodGroupsListed,
-                totalUnits,
-                lowStockAlerts,
-                availability
-        );
+        return repository.save(overview);
     }
 
-    public List<BloodAvailability> getAll() {
-        return repository.findAll();
-    }
+    // Update availability
+    public BloodAvailability updateAvailability(
+            String bloodGroup,
+            BloodAvailabilityRequest request) {
 
-    public BloodAvailability add(BloodAvailability blood) {
-
-        if (blood.getUnits() < 0) {
-            throw new IllegalArgumentException(
-                    "Units cannot be negative");
-        }
-
-        return repository.save(blood);
-    }
-
-    public BloodAvailability update(
-            Long id,
-            BloodAvailability request) {
-
-        BloodAvailability existing =
-                repository.findById(Math.toIntExact(id))
+        BloodAvailability availability =
+                repository.findByBloodGroup(bloodGroup.toUpperCase())
                         .orElseThrow(() ->
                                 new RuntimeException(
-                                        "Blood group not found"));
+                                        "Blood group not found: " + bloodGroup
+                                ));
 
-        existing.setBloodGroup(request.getBloodGroup());
-        existing.setUnits(request.getUnits());
+        availability.setUnitsAvailable(request.unitsAvailable());
 
-        return repository.save(existing);
+        return repository.save(availability);
     }
 
-    public void delete(Long id) {
+    // Get all blood availability
+    public List<BloodOverviewResponse> getAllAvailability() {
 
-        if (!repository.existsById(Math.toIntExact(id))) {
-            throw new RuntimeException(
-                    "Blood group not found");
-        }
-
-        repository.deleteById(Math.toIntExact(id));
+        return repository.findAll()
+                .stream()
+                .map(item -> new BloodOverviewResponse(
+                        item.getBloodGroup(),
+                        item.getUnitsAvailable()
+                ))
+                .toList();
     }
 }

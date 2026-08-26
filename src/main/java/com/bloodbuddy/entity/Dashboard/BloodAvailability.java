@@ -7,6 +7,7 @@ import lombok.*;
 @Table(name="tbl_blood_availability")
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Setter
 @Getter
 @ToString
@@ -16,9 +17,15 @@ public class BloodAvailability {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name="blood_group", nullable = false)
     private String bloodGroup;
 
-    @Column(nullable = false)
-    private Integer units;
+    @Column(name="blood_type", nullable = false)
+    private String bloodType;
+
+    @Column(name="units_available", nullable = false)
+    private Integer unitsAvailable;
+
+
+
 }
