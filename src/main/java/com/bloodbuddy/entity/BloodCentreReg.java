@@ -3,8 +3,11 @@ package com.bloodbuddy.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
+
+import java.time.LocalDate;
 
 @Entity
 @Table(
@@ -30,14 +33,19 @@ public class BloodCentreReg {
     @NotBlank(message = "License number is required")
     @Column(name = "bloodcetre_license_number", nullable = false,unique = true)
     private String licenseNumber;
-    @NotBlank(message = "Mobile number is required")
-    @Pattern(regexp = "^[0-9]{10}$", message = "Mobile number must be 10 digits")
-    @Column(name="mobile_number")
-    private String mobileNumber;
+    @Column(nullable = false)
+    private String category;
+    @NotNull(message = "Date of expiry is required")
+    @Column(name = "date_of_expiry", nullable = false)
+    private LocalDate dateOfExpiry;
     @Column(unique = true, nullable = false)
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email address")
     private String email;
+    @NotBlank(message = "Mobile number is required")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Mobile number must be 10 digits")
+    @Column(name="mobile_number")
+    private String mobileNumber;
     @NotBlank(message = "Password is required")
     @Column(name="password")
     private String password;
@@ -45,9 +53,12 @@ public class BloodCentreReg {
     private String confirmPassword;
     @Column(name = "address", nullable = false)
     private String address;
+    @Column(nullable = false)
+    private String district;
+    @Column(nullable = false)
+    private String city;
     @Column(name="pin_code")
     @NotBlank(message = "Pin code is required")
-
     @Pattern(regexp = "^[0-9]{6}$", message = "Pin code must be 6 digits")
     private String pincode;
 

@@ -1,9 +1,8 @@
 package com.bloodbuddy.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
+import java.time.LocalDate;
 
 public record BloodCentreRegistrationRequest(
 
@@ -22,16 +21,29 @@ public record BloodCentreRegistrationRequest(
         )
         String licenseNumber,
 
-        @NotBlank(message = "Mobile Number is required")
+        @NotBlank(message = "Category is required")
         @Pattern(
-                regexp = "^[6-9][0-9]{9}$",
-                message = "Invalid mobile number"
+                regexp = "^(Government|Private|Charitable|Redcross)$",
+                message = "Category must be Government, Private, Charitable, or Redcross"
         )
-        String mobileNumber,
+        String category,
+
+        @NotNull(message = "Date of Expiry is required")
+        LocalDate dateOfExpiry,
+
 
         @NotBlank(message = "Email is required")
         @Email(message = "Invalid email address")
         String email,
+
+                @NotBlank(message = "Mobile Number is required")
+        @Pattern(
+                regexp = "^[6-9][0-9]{9}$",
+                message = "Invalid mobile number"
+        )
+
+        String mobileNumber,
+
 
         @NotBlank(message = "Password is required")
         @Size(min = 8, message = "Password must contain at least 8 characters")
@@ -42,6 +54,13 @@ public record BloodCentreRegistrationRequest(
 
         @NotBlank(message = "Address is required")
         String address,
+
+        @NotBlank(message = "District is required")
+        String district,
+
+        @NotBlank(message = "City is required")
+        String city,
+
 
         @NotBlank(message = "Pincode is required")
         @Pattern(

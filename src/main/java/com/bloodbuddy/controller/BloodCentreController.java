@@ -7,6 +7,7 @@ import com.bloodbuddy.services.BloodCentreService;
 import com.bloodbuddy.services.TwilioOtpService;
 import jakarta.validation.Valid;
 
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,17 +16,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/blood-centres")
+@AllArgsConstructor
 public class BloodCentreController {
 
     private final BloodCentreService bloodCentreService;
 
-    //private final TwilioOtpService twilioOtpService;
-    public BloodCentreController(
-            BloodCentreService bloodCentreService, TwilioOtpService twilioOtpService) {
-
-        this.bloodCentreService = bloodCentreService;
-      //  this.twilioOtpService = twilioOtpService;
-    }
 
     @GetMapping("/bloodbuddy")
     public String BloodbuddyController() {
@@ -42,9 +37,6 @@ public class BloodCentreController {
             BloodCentreReg bloodCentre =
                     bloodCentreService.register(request);
 
-//            // Send OTP using Twilio
-//            twilioOtpService.sendOtp(
-//                    request.mobileNumber());
             return ResponseEntity.ok(
                     Map.of(
                             "success", true,

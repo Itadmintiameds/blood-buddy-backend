@@ -13,4 +13,6 @@ public interface BloodCentreRepository  extends JpaRepository<BloodCentreReg, Lo
     Optional<BloodCentreReg> findByLicenseNumber(String bloodCentrelicenseNumber);
 
     Optional<BloodCentreReg> findByEmail(String email);
+
+    boolean existsByEmail(String email);
 }
