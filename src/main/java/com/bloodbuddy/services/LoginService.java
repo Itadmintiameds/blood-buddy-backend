@@ -4,16 +4,16 @@ import com.bloodbuddy.dto.LoginRequest;
 import com.bloodbuddy.dto.LoginResponse;
 import com.bloodbuddy.entity.BloodCentreReg;
 import com.bloodbuddy.repository.BloodCentreRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@AllArgsConstructor
 public class LoginService {
 
     private final BloodCentreRepository bloodCentreRepository;
-
-    public LoginService(BloodCentreRepository bloodCentreRepository) {
-        this.bloodCentreRepository = bloodCentreRepository;
-    }
+    private final PasswordEncoder passwordEncoder;
 
     public LoginResponse login(LoginRequest request) {
 
@@ -23,9 +23,11 @@ public class LoginService {
                 .orElseThrow(() ->
                         new RuntimeException("Invalid email or password"));
 
-        // 2. Check password
-        boolean matches = request.password()
-                .equals(bloodCentre.getPassword());
+        // 2. Check password using BCrypt
+        boolean matches = passwordEncoder.matches(
+                request.password(),
+                bloodCentre.getPassword()
+        );
 
         if (!matches) {
             throw new RuntimeException("Invalid email or password");
