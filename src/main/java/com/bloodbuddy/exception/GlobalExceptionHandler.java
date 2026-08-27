@@ -1,4 +1,4 @@
-package com.bloodbuddy.exceptionhandling;
+package com.bloodbuddy.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,15 +7,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    // Handle ResourceNotFoundException
+
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleRuntimeException(
+            ResourceNotFoundException  resourceNotFoundException) {
+
         ErrorResponse errorResponse = new ErrorResponse(
-                ex.getMessage(),
-                HttpStatus.NOT_FOUND.value()
+                resourceNotFoundException.getMessage(), HttpStatus.NOT_FOUND.value()
         );
+
+
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
+
 
     // Handle Generic Exceptions
     @ExceptionHandler(Exception.class)
@@ -27,13 +31,5 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(PasswordResetException.class)
-    public ResponseEntity<String> handlePasswordResetException(
-            PasswordResetException ex) {
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
-    }
-
 }
+
