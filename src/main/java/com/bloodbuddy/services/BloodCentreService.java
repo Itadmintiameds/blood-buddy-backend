@@ -2,6 +2,8 @@ package com.bloodbuddy.services;
 
 import com.bloodbuddy.dto.BloodCentreRegistrationRequest;
 import com.bloodbuddy.entity.BloodCentreReg;
+import com.bloodbuddy.exception.PasswordMismatchException;
+import com.bloodbuddy.exception.ResourceAlreadyExistsException;
 import com.bloodbuddy.repository.BloodCentreRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,10 +19,8 @@ public class BloodCentreService {
     public BloodCentreReg register(
             BloodCentreRegistrationRequest request) {
 
-        if (!request.password()
-                .equals(request.confirmPassword())) {
-
-            throw new RuntimeException(
+        if (!request.password().equals(request.confirmPassword())) {
+            throw new PasswordMismatchException(
                     "Password and Confirm Password do not match"
             );
         }
@@ -43,20 +43,20 @@ public class BloodCentreService {
 
         // 5. Both exist
         if (licenseExists && emailExists) {
-            throw new RuntimeException(
+            throw new ResourceAlreadyExistsException(
                     "Blood Centre License Number already exists, Email already exists"
             );
         }
 
         // 6. Only license exists
         if (licenseExists) {
-            throw new RuntimeException(
+            throw new ResourceAlreadyExistsException(
                     "Blood Centre License Number already exists"
             );
         }
         // 7. Only email exists
         if (emailExists) {
-            throw new RuntimeException(
+            throw new ResourceAlreadyExistsException(
                     "Email already exists"
             );
         }

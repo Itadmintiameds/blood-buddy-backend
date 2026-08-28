@@ -3,6 +3,7 @@ package com.bloodbuddy.controller;
 import com.bloodbuddy.dto.LoginRequest;
 import com.bloodbuddy.dto.LoginResponse;
 import com.bloodbuddy.services.LoginService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,20 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/login")
+@AllArgsConstructor
 public class LoginController {
 
     private final LoginService loginService;
-
-    public LoginController(LoginService loginService) {
-        this.loginService = loginService;
-    }
-
-
     @PostMapping("/mail-password")
     public ResponseEntity<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request) {
+            @Valid @RequestBody LoginRequest request, HttpSession session) {
 
-        return ResponseEntity.ok(loginService.login(request));
+        return ResponseEntity.ok(loginService.login(request,session));
     }
 
 }

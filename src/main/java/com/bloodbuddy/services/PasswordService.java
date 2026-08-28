@@ -2,7 +2,7 @@ package com.bloodbuddy.services;
 
 import com.bloodbuddy.dto.ResetPasswordRequest;
 import com.bloodbuddy.entity.BloodCentreReg;
-import com.bloodbuddy.exceptionhandling.PasswordResetException;
+import com.bloodbuddy.exception.PasswordMismatchException;
 import com.bloodbuddy.repository.BloodCentreRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,23 +28,23 @@ public class PasswordService {
 //        }
 
         if (request == null) {
-            throw new PasswordResetException("Request body is required");
+            throw new PasswordMismatchException("Request body is required");
         }
 
         if (request.email() == null || request.email().isBlank()) {
-            throw new PasswordResetException("Email is required");
+            throw new PasswordMismatchException("Email is required");
         }
 
         if (request.newPassword() == null || request.newPassword().isBlank()) {
-            throw new PasswordResetException("New password is required");
+            throw new PasswordMismatchException("New password is required");
         }
 
         if (request.confirmPassword() == null || request.confirmPassword().isBlank()) {
-            throw new PasswordResetException("Confirm password is required");
+            throw new PasswordMismatchException("Confirm password is required");
         }
 
         if (!request.newPassword().equals(request.confirmPassword())) {
-            throw new PasswordResetException("Passwords do not match");
+            throw new PasswordMismatchException("Passwords do not match");
         }
 
         BloodCentreReg bloodCentre =
