@@ -1,6 +1,7 @@
 package com.bloodbuddy.services.Dashboard;
 
 import com.bloodbuddy.dto.Dashboard.BloodAvailabilityRequest;
+import com.bloodbuddy.dto.Dashboard.BloodAvailabilityResponse;
 import com.bloodbuddy.dto.Dashboard.BloodOverviewRequest;
 import com.bloodbuddy.dto.Dashboard.BloodOverviewResponse;
 import com.bloodbuddy.entity.Dashboard.BloodAvailability;
@@ -45,6 +46,18 @@ public class BloodAvailabilityService {
                 .build();
 
         return repository.save(overview);
+    }
+
+    public List<BloodAvailabilityResponse> getBloodAvailability() {
+
+        return repository.findAll()
+                .stream()
+                .map(item -> new BloodAvailabilityResponse(
+                        item.getBloodGroup(),
+                        item.getBloodType(),
+                        item.getUnitsAvailable()
+                ))
+                .toList();
     }
 
     // Update availability

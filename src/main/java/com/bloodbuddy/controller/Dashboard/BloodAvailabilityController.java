@@ -1,6 +1,7 @@
 package com.bloodbuddy.controller.Dashboard;
 
 import com.bloodbuddy.dto.Dashboard.BloodAvailabilityRequest;
+import com.bloodbuddy.dto.Dashboard.BloodAvailabilityResponse;
 import com.bloodbuddy.dto.Dashboard.BloodOverviewRequest;
 import com.bloodbuddy.dto.Dashboard.BloodOverviewResponse;
 import com.bloodbuddy.entity.Dashboard.BloodAvailability;
@@ -24,6 +25,10 @@ public class BloodAvailabilityController {
         return ResponseEntity.ok(service.getAllAvailability());
     }
 
+    @GetMapping("/bloodgroup_availability")
+    public ResponseEntity<List<BloodAvailabilityResponse>> getBloodAvailability() {
+        return ResponseEntity.ok(service.getBloodAvailability());
+    }
 
     // Add new blood availability
     @PostMapping("/add_overview")
