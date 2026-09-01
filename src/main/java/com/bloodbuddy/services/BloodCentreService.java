@@ -2,10 +2,13 @@ package com.bloodbuddy.services;
 
 import com.bloodbuddy.dto.BloodCentreRegistrationRequest;
 import com.bloodbuddy.entity.BloodCentreReg;
+import com.bloodbuddy.entity.Superadmin.Superadmin;
 import com.bloodbuddy.exception.PasswordMismatchException;
 import com.bloodbuddy.exception.ResourceAlreadyExistsException;
 import com.bloodbuddy.repository.BloodCentreRepository;
+import com.bloodbuddy.repository.superadmin.SuperadminRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 public class BloodCentreService {
 
     private final BloodCentreRepository bloodCentreRepository;
+    private final SuperadminRepository superadminRepository;
     private final PasswordEncoder passwordEncoder;
 
     public BloodCentreReg register(
@@ -106,6 +110,33 @@ public class BloodCentreService {
                 request.pincode()
         );
 
-        return bloodCentreRepository.save(bloodCentre);
+
+        BloodCentreReg savedBloodCentre = bloodCentreRepository.save(bloodCentre);
+
+        Superadmin superadmin = new Superadmin();
+
+        superadmin.setBloodCentreName(
+                savedBloodCentre.getBloodCentreName()
+        );
+
+        superadmin.setCategory(
+                savedBloodCentre.getCategory()
+        );
+
+        superadmin.setMobileNumber(
+                savedBloodCentre.getMobileNumber()
+        );
+
+        superadmin.setAddress(
+                savedBloodCentre.getAddress()
+        );
+
+        superadmin.setBloodCentre(
+                savedBloodCentre
+        );
+
+        superadminRepository.save(superadmin);
+
+        return savedBloodCentre;
     }
 }

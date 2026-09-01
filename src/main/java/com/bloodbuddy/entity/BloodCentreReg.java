@@ -1,5 +1,6 @@
 package com.bloodbuddy.entity;
 
+import com.bloodbuddy.entity.Superadmin.Superadmin;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -61,5 +62,8 @@ public class BloodCentreReg {
     @NotBlank(message = "Pin code is required")
     @Pattern(regexp = "^[0-9]{6}$", message = "Pin code must be 6 digits")
     private String pincode;
+
+    @OneToOne(mappedBy = "bloodCentre")
+    private Superadmin superadmin;
 
 }
