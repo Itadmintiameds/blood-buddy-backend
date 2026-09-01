@@ -3,9 +3,9 @@ package com.bloodbuddy.services.Superadmin;
 import com.bloodbuddy.dto.Superadmin.SuperadminResponse;
 import com.bloodbuddy.dto.Superadmin.SuperadminUpdateRequest;
 import com.bloodbuddy.entity.Superadmin.Superadmin;
+import com.bloodbuddy.exception.ResourceNotFoundException;
 import com.bloodbuddy.repository.superadmin.SuperadminRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,7 +38,7 @@ public class SuperadminService {
 
         Superadmin superadmin =superadminRepository.findById(id)
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Superadmin record not found"
                                 ));
 
