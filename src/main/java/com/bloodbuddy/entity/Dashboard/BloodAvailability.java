@@ -1,5 +1,6 @@
 package com.bloodbuddy.entity.Dashboard;
 
+import com.bloodbuddy.entity.Superadmin.Bloodbank;
 import jakarta.persistence.*;
 import lombok.*;
 

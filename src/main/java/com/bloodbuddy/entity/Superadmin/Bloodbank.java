@@ -7,13 +7,13 @@ import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
 @Entity
-@Table(name = "superadmin_blood_centre")
+@Table(name = "blood_bank")
 @NoArgsConstructor
 @AllArgsConstructor
 @Setter
 @Getter
 @ToString
-public class Superadmin {
+public class Bloodbank {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

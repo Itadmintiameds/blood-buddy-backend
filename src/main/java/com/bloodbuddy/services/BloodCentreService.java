@@ -2,13 +2,14 @@ package com.bloodbuddy.services;
 
 import com.bloodbuddy.dto.BloodCentreRegistrationRequest;
 import com.bloodbuddy.entity.BloodCentreReg;
-import com.bloodbuddy.entity.Superadmin.Superadmin;
+import com.bloodbuddy.entity.Superadmin.Bloodbank;
 import com.bloodbuddy.exception.PasswordMismatchException;
 import com.bloodbuddy.exception.ResourceAlreadyExistsException;
 import com.bloodbuddy.repository.BloodCentreRepository;
-import com.bloodbuddy.repository.superadmin.SuperadminRepository;
+import com.bloodbuddy.repository.superadmin.BloodbankRepository;
+import com.bloodbuddy.repository.superadmin.SuperadminLoginRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +18,11 @@ import org.springframework.stereotype.Service;
 public class BloodCentreService {
 
     private final BloodCentreRepository bloodCentreRepository;
-    private final SuperadminRepository superadminRepository;
+    private final BloodbankRepository bloodBankRepository;
+    private final SuperadminLoginRepository superadminLoginRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public BloodCentreReg register(
             BloodCentreRegistrationRequest request) {
 
@@ -27,7 +30,7 @@ public class BloodCentreService {
             throw new PasswordMismatchException(
                     "Password and Confirm Password do not match"
             );
-        }
+      }
 
         String licenseNumber =
                 request.licenseNumber()
@@ -113,29 +116,29 @@ public class BloodCentreService {
 
         BloodCentreReg savedBloodCentre = bloodCentreRepository.save(bloodCentre);
 
-        Superadmin superadmin = new Superadmin();
+        Bloodbank bloodbank = new Bloodbank();
 
-        superadmin.setBloodCentreName(
+        bloodbank.setBloodCentreName(
                 savedBloodCentre.getBloodCentreName()
         );
 
-        superadmin.setCategory(
+        bloodbank.setCategory(
                 savedBloodCentre.getCategory()
         );
 
-        superadmin.setMobileNumber(
+        bloodbank.setMobileNumber(
                 savedBloodCentre.getMobileNumber()
         );
 
-        superadmin.setAddress(
+        bloodbank.setAddress(
                 savedBloodCentre.getAddress()
         );
 
-        superadmin.setBloodCentre(
+        bloodbank.setBloodCentre(
                 savedBloodCentre
         );
 
-        superadminRepository.save(superadmin);
+        bloodBankRepository.save(bloodbank);
 
         return savedBloodCentre;
     }

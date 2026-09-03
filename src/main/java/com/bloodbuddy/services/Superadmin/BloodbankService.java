@@ -2,24 +2,25 @@ package com.bloodbuddy.services.Superadmin;
 
 import com.bloodbuddy.dto.Superadmin.SuperadminResponse;
 import com.bloodbuddy.dto.Superadmin.SuperadminUpdateRequest;
-import com.bloodbuddy.entity.Superadmin.Superadmin;
-import com.bloodbuddy.repository.superadmin.SuperadminRepository;
+import com.bloodbuddy.entity.Superadmin.Bloodbank;
+import com.bloodbuddy.repository.superadmin.BloodbankRepository;
+import com.bloodbuddy.repository.superadmin.SuperadminLoginRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class SuperadminService {
+public class BloodbankService {
 
 
-    private final SuperadminRepository superadminRepository;
+    private final BloodbankRepository bloodbankRepository;
+    private final SuperadminLoginRepository superadminLoginRepository;
 
     public List<SuperadminResponse> getAllSuperadmins() {
 
-        return superadminRepository.findAll()
+        return bloodbankRepository.findAll()
                 .stream()
                 .map(superadmin -> new SuperadminResponse(
                         superadmin.getId(),
@@ -36,29 +37,29 @@ public class SuperadminService {
 
             Long id, SuperadminUpdateRequest request) {
 
-        Superadmin superadmin =superadminRepository.findById(id)
+        Bloodbank bloodbank =bloodbankRepository.findById(id)
                         .orElseThrow(() ->
                                 new RuntimeException(
                                         "Superadmin record not found"
                                 ));
 
-        superadmin.setBloodCentreName(
+        bloodbank.setBloodCentreName(
                 request.bloodCentreName().trim()
         );
 
-        superadmin.setCategory(
+        bloodbank.setCategory(
                 request.category().trim()
         );
 
-        superadmin.setMobileNumber(
+        bloodbank.setMobileNumber(
                 request.mobileNumber()
         );
 
-        superadmin.setAddress(
+        bloodbank.setAddress(
                 request.address().trim()
         );
 
-        Superadmin updated = superadminRepository.save(superadmin);
+        Bloodbank updated = bloodbankRepository.save(bloodbank);
 
         return new SuperadminResponse(
                 updated.getBloodCentre().getId(),

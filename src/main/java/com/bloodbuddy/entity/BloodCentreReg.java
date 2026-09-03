@@ -1,6 +1,6 @@
 package com.bloodbuddy.entity;
 
-import com.bloodbuddy.entity.Superadmin.Superadmin;
+import com.bloodbuddy.entity.Superadmin.Bloodbank;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -64,6 +64,6 @@ public class BloodCentreReg {
     private String pincode;
 
     @OneToOne(mappedBy = "bloodCentre")
-    private Superadmin superadmin;
+    private Bloodbank bloodBank;
 
 }
