@@ -1,6 +1,8 @@
+package com.bloodbuddy.exception;
+
 public class ResourceNotFoundException extends RuntimeException{
 
-    public ResourceNotFoundException(){
+    public ResourceNotFoundException(String superadminRecordNotFound){
         super();
     }
 }
