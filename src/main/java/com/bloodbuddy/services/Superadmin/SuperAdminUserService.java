@@ -94,8 +94,14 @@ public class SuperAdminUserService {
                 superAdminuser.getRole().name()
         );
 
-        return new SuperAdminLoginResponse(accessToken);
-
+        return new SuperAdminLoginResponse(
+                "Login successful",
+                superAdminuser.getId(),
+                superAdminuser.getName(),
+                superAdminuser.getEmail(),
+                superAdminuser.getRole().name(),
+                accessToken
+        );
 
     }
 }
