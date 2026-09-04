@@ -20,7 +20,7 @@ public class BloodbankController {
     private final BloodbankService bloodbankService;
     private final SuperAdminUserService superAdminUserService;
 
-    @PostMapping("/register")
+    @PostMapping("/adduser")
     public ResponseEntity<?> register(
             @Valid @RequestBody SuperAdminLoginRequest request) {
 
