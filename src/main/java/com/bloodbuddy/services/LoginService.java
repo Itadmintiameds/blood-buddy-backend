@@ -4,6 +4,7 @@ import com.bloodbuddy.dto.LoginRequest;
 import com.bloodbuddy.dto.LoginResponse;
 import com.bloodbuddy.entity.BloodCentreReg;
 import com.bloodbuddy.exception.ResourceAlreadyExistsException;
+import com.bloodbuddy.jwt.JwtService;
 import com.bloodbuddy.repository.BloodCentreRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,7 @@ public class LoginService {
 
     private final BloodCentreRepository bloodCentreRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public LoginResponse login(
             LoginRequest request,
@@ -44,30 +46,18 @@ public class LoginService {
             );
         }
 
-        String loggedInEmail =
-                (String) session.getAttribute("USER_EMAIL");
 
-        if (loggedInEmail != null) {
 
-            return new LoginResponse(
-                    "Already logged in",
-                    loggedInEmail
-            );
-        }
-
-        session.setAttribute(
-                "USER_ID",
-                bloodCentre.getId()
-        );
-
-        session.setAttribute(
-                "USER_EMAIL",
+        String accessToken = jwtService.generateToken(
+                bloodCentre.getId(),
                 bloodCentre.getEmail()
         );
 
         return new LoginResponse(
                 "Login successful",
-                bloodCentre.getEmail()
+                bloodCentre.getId(),
+                bloodCentre.getEmail(),
+                accessToken
         );
     }
 }

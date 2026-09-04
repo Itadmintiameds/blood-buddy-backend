@@ -2,6 +2,8 @@ package com.bloodbuddy.jwt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,20 @@ public class JwtService {
                 .claim("name", name)
                 .claim("email", email)
                 .claim("role", role)
+                .setIssuedAt(new Date())
+                .setExpiration(
+                        new Date(System.currentTimeMillis() + 86400000)
+                )
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String generateToken(Long userId, String email) {
+
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("userId", userId)
+                .claim("email", email)
                 .setIssuedAt(new Date())
                 .setExpiration(
                         new Date(System.currentTimeMillis() + 86400000)

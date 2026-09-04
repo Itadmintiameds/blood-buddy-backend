@@ -2,6 +2,8 @@ package com.bloodbuddy.dto;
 
 public record LoginResponse(
         String message,
-        String email
+        long id,
+        String email,
+        String accessToken
 ) {
 }
