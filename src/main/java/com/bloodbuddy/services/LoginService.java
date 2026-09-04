@@ -3,6 +3,7 @@ package com.bloodbuddy.services;
 import com.bloodbuddy.dto.LoginRequest;
 import com.bloodbuddy.dto.LoginResponse;
 import com.bloodbuddy.entity.BloodCentreReg;
+import com.bloodbuddy.exception.AlreadyLoggedInException;
 import com.bloodbuddy.exception.ResourceAlreadyExistsException;
 import com.bloodbuddy.jwt.JwtService;
 import com.bloodbuddy.repository.BloodCentreRepository;
@@ -46,10 +47,32 @@ public class LoginService {
             );
         }
 
+        // 3. Check whether SAME user is already logged in
+        String loggedInEmail =
+                (String) session.getAttribute("USER_EMAIL");
+
+        if (loggedInEmail != null &&
+                loggedInEmail.equalsIgnoreCase(email)) {
+
+            throw new AlreadyLoggedInException(
+                    " already logged in"
+            );
+        }
+
 
 
         String accessToken = jwtService.generateToken(
                 bloodCentre.getId(),
+                bloodCentre.getEmail()
+        );
+
+        session.setAttribute(
+                "USER_ID",
+                bloodCentre.getId()
+        );
+
+        session.setAttribute(
+                "USER_EMAIL",
                 bloodCentre.getEmail()
         );
 

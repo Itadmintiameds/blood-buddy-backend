@@ -54,6 +54,21 @@ public class GlobalExceptionHandling {
                 .body(response);
     }
 
+    @ExceptionHandler(AlreadyLoggedInException.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyLoggedIn(
+            AlreadyLoggedInException ex) {
+
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.CONFLICT.value(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(
             Exception ex) {

@@ -3,6 +3,7 @@ package com.bloodbuddy.controller.Superadmin;
 import com.bloodbuddy.dto.Superadmin.*;
 import com.bloodbuddy.services.Superadmin.BloodbankService;
 import com.bloodbuddy.services.Superadmin.SuperAdminUserService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,9 +23,9 @@ public class BloodbankController {
 
     @PostMapping("/adduser")
     public ResponseEntity<?> register(
-            @Valid @RequestBody SuperAdminLoginRequest request) {
+            @Valid @RequestBody SuperAdminLoginRequest request, HttpSession session) {
 
-        String message = superAdminUserService.register(request);
+        String message = superAdminUserService.register(request,session);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -33,10 +34,10 @@ public class BloodbankController {
 
     @PostMapping("/login")
     public ResponseEntity<SuperAdminLoginResponse> login(
-            @Valid @RequestBody SuperAdminUserRequest request) {
+            @Valid @RequestBody SuperAdminUserRequest request, HttpSession session) {
 
 
-        return ResponseEntity.ok(superAdminUserService.login(request));
+        return ResponseEntity.ok(superAdminUserService.login(request,session));
     }
 
     @GetMapping("/blood_banks")

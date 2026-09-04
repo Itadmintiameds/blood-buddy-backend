@@ -4,11 +4,13 @@ import com.bloodbuddy.dto.Superadmin.SuperAdminLoginRequest;
 import com.bloodbuddy.dto.Superadmin.SuperAdminLoginResponse;
 import com.bloodbuddy.dto.Superadmin.SuperAdminUserRequest;
 import com.bloodbuddy.entity.Superadmin.SuperadminUser;
+import com.bloodbuddy.exception.AlreadyLoggedInException;
 import com.bloodbuddy.exception.InvalidCredentialsException;
 import com.bloodbuddy.exception.PasswordMismatchException;
 import com.bloodbuddy.exception.ResourceAlreadyExistsException;
 import com.bloodbuddy.jwt.JwtService;
 import com.bloodbuddy.repository.superadmin.SuperadminLoginRepository;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +24,9 @@ public class SuperAdminUserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public String register(SuperAdminLoginRequest request) {
+    public String register(
+            SuperAdminLoginRequest request,
+            HttpSession session) {
 
         if (!request.password()
                 .equals(request.retypePassword())) {
@@ -32,7 +36,8 @@ public class SuperAdminUserService {
             );
         }
 
-        if (superadminLoginRepository.existsByEmail(request.email())) {
+        if (superadminLoginRepository
+                .existsByEmail(request.email())) {
 
             throw new ResourceAlreadyExistsException(
                     "Email already registered"
@@ -64,17 +69,26 @@ public class SuperAdminUserService {
         return "Superadmin registered successfully";
     }
 
+    public SuperAdminLoginResponse login(
+            @Valid SuperAdminUserRequest request,
+            HttpSession session) {
 
-    public SuperAdminLoginResponse login(@Valid SuperAdminUserRequest request) {
+        // 1. Get email
+        String email = request.email()
+                .trim()
+                .toLowerCase();
 
-        SuperadminUser superAdminuser = superadminLoginRepository
-                .findByEmail(request.email())
-                .orElseThrow(() ->
-                        new InvalidCredentialsException(
-                                "Invalid email or password"
-                        )
-                );
+        // 2. Find Superadmin
+        SuperadminUser superAdminuser =
+                superadminLoginRepository
+                        .findByEmail(email)
+                        .orElseThrow(() ->
+                                new InvalidCredentialsException(
+                                        "Invalid email or password"
+                                )
+                        );
 
+        // 3. Check password
         boolean passwordMatches =
                 passwordEncoder.matches(
                         request.password(),
@@ -87,13 +101,41 @@ public class SuperAdminUserService {
             );
         }
 
-        String accessToken = jwtService.generateToken(
-                superAdminuser.getId(),
-                superAdminuser.getName(),
-                superAdminuser.getEmail(),
-                superAdminuser.getRole().name()
+        // 4. Check if SAME Superadmin is already logged in
+        String loggedInEmail =
+                (String) session.getAttribute(
+                        "SUPERADMIN_EMAIL"
+                );
+
+        if (loggedInEmail != null &&
+                loggedInEmail.equalsIgnoreCase(email)) {
+
+            throw new AlreadyLoggedInException(
+                    "Superadmin is already logged in"
+            );
+        }
+
+        // 5. Generate JWT
+        String accessToken =
+                jwtService.generateToken(
+                        superAdminuser.getId(),
+                        superAdminuser.getName(),
+                        superAdminuser.getEmail(),
+                        superAdminuser.getRole().name()
+                );
+
+        // 6. Store current Superadmin in session
+        session.setAttribute(
+                "SUPERADMIN_ID",
+                superAdminuser.getId()
         );
 
+        session.setAttribute(
+                "SUPERADMIN_EMAIL",
+                superAdminuser.getEmail()
+        );
+
+        // 7. Return successful login response
         return new SuperAdminLoginResponse(
                 "Login successful",
                 superAdminuser.getId(),
@@ -102,6 +144,5 @@ public class SuperAdminUserService {
                 superAdminuser.getRole().name(),
                 accessToken
         );
-
     }
 }
