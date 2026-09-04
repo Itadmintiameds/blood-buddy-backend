@@ -87,6 +87,7 @@ public class SuperAdminUserService {
 
         return new SuperAdminLoginResponse(
                 "Login successful",
+                superAdminuser.getId(),
                 superAdminuser.getEmail(),
                 superAdminuser.getRole().name()
         );
