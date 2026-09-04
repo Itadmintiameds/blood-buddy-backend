@@ -7,6 +7,7 @@ import com.bloodbuddy.entity.Superadmin.SuperadminUser;
 import com.bloodbuddy.exception.InvalidCredentialsException;
 import com.bloodbuddy.exception.PasswordMismatchException;
 import com.bloodbuddy.exception.ResourceAlreadyExistsException;
+import com.bloodbuddy.jwt.JwtService;
 import com.bloodbuddy.repository.superadmin.SuperadminLoginRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class SuperAdminUserService {
 
     private final SuperadminLoginRepository superadminLoginRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public String register(SuperAdminLoginRequest request) {
 
@@ -85,11 +87,15 @@ public class SuperAdminUserService {
             );
         }
 
-        return new SuperAdminLoginResponse(
-                "Login successful",
+        String accessToken = jwtService.generateToken(
                 superAdminuser.getId(),
+                superAdminuser.getName(),
                 superAdminuser.getEmail(),
                 superAdminuser.getRole().name()
         );
+
+        return new SuperAdminLoginResponse(accessToken);
+
+
     }
 }
