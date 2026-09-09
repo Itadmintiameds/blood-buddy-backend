@@ -30,9 +30,9 @@ public class GlobalExceptionHandling {
 
         ErrorResponse errorResponse = new ErrorResponse(
                 "Validation failed",
+                errors,
                 HttpStatus.BAD_REQUEST.value(),
                 LocalDateTime.now()
-
         );
 
         return ResponseEntity
@@ -46,10 +46,11 @@ public class GlobalExceptionHandling {
 
         ErrorResponse response = new ErrorResponse(
                 ex.getMessage(),
+                null,
                 HttpStatus.NOT_FOUND.value(),
                 LocalDateTime.now()
         );
-        return ResponseEntity
+      return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(response);
     }
@@ -60,6 +61,7 @@ public class GlobalExceptionHandling {
 
         ErrorResponse response = new ErrorResponse(
                 ex.getMessage(),
+                null,
                 HttpStatus.CONFLICT.value(),
                 LocalDateTime.now()
         );
@@ -69,12 +71,32 @@ public class GlobalExceptionHandling {
                 .body(response);
     }
 
+
+    // Blood availability already exists
+    @ExceptionHandler(ResourceBloodGroupAndBloodCentre.class)
+    public ResponseEntity<ErrorResponse> handleResourceBloodGroupAndBloodCentre(
+            ResourceBloodGroupAndBloodCentre ex) {
+
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                null,
+                HttpStatus.CONFLICT.value(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(
             Exception ex) {
         ex.printStackTrace();
         ErrorResponse response = new ErrorResponse(
                 ex.getMessage(),
+                null,
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 LocalDateTime.now()
         );

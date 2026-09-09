@@ -2,11 +2,9 @@ package com.bloodbuddy.services;
 
 import com.bloodbuddy.dto.BloodCentreRegistrationRequest;
 import com.bloodbuddy.entity.BloodCentreReg;
-import com.bloodbuddy.entity.Superadmin.Bloodbank;
 import com.bloodbuddy.exception.PasswordMismatchException;
 import com.bloodbuddy.exception.ResourceAlreadyExistsException;
 import com.bloodbuddy.repository.BloodCentreRepository;
-import com.bloodbuddy.repository.superadmin.BloodbankRepository;
 import com.bloodbuddy.repository.superadmin.SuperadminLoginRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Service;
 public class BloodCentreService {
 
     private final BloodCentreRepository bloodCentreRepository;
-    private final BloodbankRepository bloodBankRepository;
     private final SuperadminLoginRepository superadminLoginRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -115,30 +112,6 @@ public class BloodCentreService {
 
 
         BloodCentreReg savedBloodCentre = bloodCentreRepository.save(bloodCentre);
-
-        Bloodbank bloodbank = new Bloodbank();
-
-        bloodbank.setBloodCentreName(
-                savedBloodCentre.getBloodCentreName()
-        );
-
-        bloodbank.setCategory(
-                savedBloodCentre.getCategory()
-        );
-
-        bloodbank.setMobileNumber(
-                savedBloodCentre.getMobileNumber()
-        );
-
-        bloodbank.setAddress(
-                savedBloodCentre.getAddress()
-        );
-
-        bloodbank.setBloodCentre(
-                savedBloodCentre
-        );
-
-        bloodBankRepository.save(bloodbank);
 
         return savedBloodCentre;
     }

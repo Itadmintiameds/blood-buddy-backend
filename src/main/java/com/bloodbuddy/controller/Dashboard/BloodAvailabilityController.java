@@ -42,26 +42,20 @@ public class BloodAvailabilityController {
 
     // Add new blood availability
     @PostMapping("/add_availability")
-    public ResponseEntity<BloodAvailability> addAvailability(
+    public ResponseEntity<BloodAvailabilityResponse> addAvailability(
             @Valid @RequestBody BloodAvailabilityRequest request) {
 
-        return ResponseEntity.ok(
-                service.addAvailability(request)
-        );
-    }
+        BloodAvailability availability =service.addAvailability(request);
 
-
-    // Update units
-    @PutMapping("/{bloodGroup}")
-    public ResponseEntity<BloodAvailability> updateAvailability(
-            @PathVariable String bloodGroup,
-            @Valid @RequestBody BloodAvailabilityRequest request) {
-
-        BloodAvailability response =
-                service.updateAvailability(bloodGroup, request);
+        BloodAvailabilityResponse response = new BloodAvailabilityResponse(
+                        availability.getBloodCentre().getId(),
+                        availability.getBloodType(),
+                        availability.getBloodGroup(),
+                        availability.getUnitsAvailable()
+                );
 
         return ResponseEntity.ok(response);
+
+
     }
-
-
 }

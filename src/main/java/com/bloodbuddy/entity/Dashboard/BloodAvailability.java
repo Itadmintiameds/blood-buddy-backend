@@ -1,6 +1,6 @@
 package com.bloodbuddy.entity.Dashboard;
 
-import com.bloodbuddy.entity.Superadmin.Bloodbank;
+import com.bloodbuddy.entity.BloodCentreReg;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +27,9 @@ public class BloodAvailability {
     @Column(name="units_available", nullable = false)
     private Integer unitsAvailable;
 
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "blood_centre_id", nullable = false)
+    @ToString.Exclude
+    private BloodCentreReg bloodCentre;
 
 }

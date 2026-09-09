@@ -1,6 +1,6 @@
 package com.bloodbuddy.entity;
 
-import com.bloodbuddy.entity.Superadmin.Bloodbank;
+import com.bloodbuddy.entity.Dashboard.BloodAvailability;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(
@@ -63,7 +64,10 @@ public class BloodCentreReg {
     @Pattern(regexp = "^[0-9]{6}$", message = "Pin code must be 6 digits")
     private String pincode;
 
-    @OneToOne(mappedBy = "bloodCentre")
-    private Bloodbank bloodBank;
+
+    @OneToMany(mappedBy = "bloodCentre", cascade = CascadeType.ALL)
+    private List<BloodAvailability> bloodAvailabilities;
+
+
 
 }

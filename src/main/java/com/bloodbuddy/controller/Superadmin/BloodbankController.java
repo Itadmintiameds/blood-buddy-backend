@@ -1,7 +1,6 @@
 package com.bloodbuddy.controller.Superadmin;
 
 import com.bloodbuddy.dto.Superadmin.*;
-import com.bloodbuddy.services.Superadmin.BloodbankService;
 import com.bloodbuddy.services.Superadmin.SuperAdminUserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -18,7 +17,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BloodbankController {
 
-    private final BloodbankService bloodbankService;
     private final SuperAdminUserService superAdminUserService;
 
     @PostMapping("/adduser")
@@ -40,20 +38,6 @@ public class BloodbankController {
         return ResponseEntity.ok(superAdminUserService.login(request,session));
     }
 
-    @GetMapping("/blood_banks")
-    public ResponseEntity<List<SuperadminResponse>> getSuperadmin() {
-
-        return ResponseEntity.ok(bloodbankService.getAllSuperadmins());
-    }
-    @PutMapping("/edit/{id}")
-    public ResponseEntity<SuperadminResponse> updateSuperadmin(
-           @PathVariable Long id,
-            @Valid @RequestBody SuperadminUpdateRequest request) {
-
-        return ResponseEntity.ok(
-                bloodbankService.updateSuperadmin(id, request)
-        );
-    }
 
 
 }
