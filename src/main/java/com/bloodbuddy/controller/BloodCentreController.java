@@ -30,7 +30,7 @@ public class BloodCentreController {
         return ResponseEntity.ok(
                 Map.of(
                         "success", true,
-                        "message", "OTP sent successfully"
+                        "message", "Blood Centre Registration successfully"
                 )
         );
     }
