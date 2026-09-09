@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: backend
+
+  profiles:
+    active: dev
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+logging:
+  level:
+    root: INFO
+
+app:
+  cookie:
+    domain:

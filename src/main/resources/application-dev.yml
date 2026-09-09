@@ -1,0 +1,48 @@
+jwt:
+  secret-key: 1234567890123456789012345678901234567890
+  access-token-expiry: 1800000
+  refresh-token-expiry: 604800000
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/blood_buddy
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: itadmin@tiameds.ai
+    password: ugejmrtofdxpgarn
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+
+app:
+  cookie:
+    domain:
+
+#     AWS S3 Configuration
+
+aws:
+  s3:
+    access-key: ${AWS_ACCESS_KEY:dummy}
+    secret-key: ${AWS_SECRET_KEY:dummy}
+    region: ${AWS_REGION:ap-south-1}
+    bucket-name: ${AWS_BUCKET_NAME:dummy}
