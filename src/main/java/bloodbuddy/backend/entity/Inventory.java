@@ -12,10 +12,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Check;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,7 +27,11 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "inventory")
+// One running stock row per (centre, group, component); units may never go negative.
+@Table(name = "inventory", uniqueConstraints = @UniqueConstraint(
+        name = "uq_inventory_centre_group_component",
+        columnNames = {"blood_centre_id", "blood_group_id", "blood_component_id"}))
+@Check(name = "chk_inventory_units_non_negative", constraints = "available_units >= 0")
 public class Inventory {
 
     @Id
