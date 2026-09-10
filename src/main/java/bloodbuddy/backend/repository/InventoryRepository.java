@@ -15,6 +15,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     Optional<Inventory> findByBloodCentre_BloodCentreIdAndBloodGroup_BloodGroupIdAndBloodComponent_BloodComponentId(
             Long bloodCentreId, Long bloodGroupId, Long bloodComponentId);
 
+    List<Inventory> findByBloodCentre_BloodCentreId(Long bloodCentreId);
+
     // A centre matches a recipient when it stocks the requested group + component
     // with units on hand AND shares the recipient's pincode, city, or district.
     @Query("SELECT i FROM Inventory i JOIN FETCH i.bloodCentre c "
