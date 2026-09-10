@@ -37,6 +37,9 @@ server:
 app:
   cookie:
     domain:
+  cors:
+    # Comma-separated allowed origins; "*" allows any origin.
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 #     AWS S3 Configuration
 
