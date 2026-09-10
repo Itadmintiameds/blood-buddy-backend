@@ -3,6 +3,7 @@ package bloodbuddy.backend.service;
 import bloodbuddy.backend.entity.EmailVerification;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.repository.EmailVerificationRepository;
+import bloodbuddy.backend.repository.UsersRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,14 +24,17 @@ public class EmailVerificationService {
     private static final int OTP_BOUND = 1_000_000; // 6-digit OTP: 000000-999999
 
     private final EmailVerificationRepository emailVerificationRepository;
+    private final UsersRepository usersRepository;
     private final JavaMailSender mailSender;
     private final SecureRandom random = new SecureRandom();
     private final String fromAddress;
 
     public EmailVerificationService(EmailVerificationRepository emailVerificationRepository,
+                                    UsersRepository usersRepository,
                                     JavaMailSender mailSender,
                                     @Value("${spring.mail.username}") String fromAddress) {
         this.emailVerificationRepository = emailVerificationRepository;
+        this.usersRepository = usersRepository;
         this.mailSender = mailSender;
         this.fromAddress = fromAddress;
     }
@@ -38,6 +42,11 @@ public class EmailVerificationService {
     /** Issues a fresh OTP for the email (invalidating any prior one) and emails it. */
     @Transactional
     public void sendOtp(String email) {
+        // No point verifying an email that already has an account (username == email).
+        if (usersRepository.existsByEmail(email) || usersRepository.existsByUsername(email)) {
+            throw new BadRequestException("An account with this email already exists");
+        }
+
         String otp = String.format("%06d", random.nextInt(OTP_BOUND));
         LocalDateTime now = LocalDateTime.now();
 
