@@ -3,8 +3,11 @@ package bloodbuddy.backend.controller;
 import bloodbuddy.backend.common.ApiResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreRegistrationRequest;
 import bloodbuddy.backend.dto.centre.BloodCentreRegistrationResponse;
+import bloodbuddy.backend.dto.centre.SendOtpRequest;
+import bloodbuddy.backend.dto.centre.VerifyOtpRequest;
 import bloodbuddy.backend.security.CustomUserDetails;
 import bloodbuddy.backend.service.BloodCentreService;
+import bloodbuddy.backend.service.EmailVerificationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +22,24 @@ import org.springframework.web.bind.annotation.RestController;
 public class BloodCentreController {
 
     private final BloodCentreService bloodCentreService;
+    private final EmailVerificationService emailVerificationService;
 
-    public BloodCentreController(BloodCentreService bloodCentreService) {
+    public BloodCentreController(BloodCentreService bloodCentreService,
+                                 EmailVerificationService emailVerificationService) {
         this.bloodCentreService = bloodCentreService;
+        this.emailVerificationService = emailVerificationService;
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<ApiResponse<Void>> sendOtp(@Valid @RequestBody SendOtpRequest request) {
+        emailVerificationService.sendOtp(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("OTP sent to " + request.getEmail()));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        emailVerificationService.verifyOtp(request.getEmail(), request.getOtp());
+        return ResponseEntity.ok(ApiResponse.success("Email verified successfully"));
     }
 
     /**

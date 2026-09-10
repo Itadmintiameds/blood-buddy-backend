@@ -11,6 +11,7 @@ import bloodbuddy.backend.exception.ResourceNotFoundException;
 import bloodbuddy.backend.repository.BloodCentresRepository;
 import bloodbuddy.backend.repository.RolesRepository;
 import bloodbuddy.backend.repository.UsersRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,22 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class BloodCentreService {
 
     private final BloodCentresRepository bloodCentresRepository;
     private final UsersRepository usersRepository;
     private final RolesRepository rolesRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public BloodCentreService(BloodCentresRepository bloodCentresRepository,
-                              UsersRepository usersRepository,
-                              RolesRepository rolesRepository,
-                              PasswordEncoder passwordEncoder) {
-        this.bloodCentresRepository = bloodCentresRepository;
-        this.usersRepository = usersRepository;
-        this.rolesRepository = rolesRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final EmailVerificationService emailVerificationService;
 
     /**
      * Registers a blood centre and its linked login. Serves both self-registration (public)
@@ -42,6 +35,9 @@ public class BloodCentreService {
      */
     @Transactional
     public BloodCentreRegistrationResponse register(BloodCentreRegistrationRequest request, String actor) {
+        // Registration is gated on a prior OTP verification of this email.
+        emailVerificationService.assertEmailVerified(request.getEmail());
+
         // The centre's email doubles as the login username, so it must be free on both counts.
         if (usersRepository.existsByUsername(request.getEmail()) || usersRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("An account with this email already exists: " + request.getEmail());
@@ -87,6 +83,9 @@ public class BloodCentreService {
         user.setCreatedAt(now);
         user.setCreatedBy(actor);
         usersRepository.save(user);
+
+        // Consume the verification so the OTP cannot be reused for another registration.
+        emailVerificationService.clearVerification(request.getEmail());
 
         return BloodCentreRegistrationResponse.builder()
                 .bloodCentreId(centre.getBloodCentreId())
