@@ -1,6 +1,8 @@
 package bloodbuddy.backend.service;
 
+import bloodbuddy.backend.dto.centre.BloodCentreResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
+import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
 import bloodbuddy.backend.dto.inventory.InventoryResponse;
 import bloodbuddy.backend.dto.inventory.StockAdjustmentRequest;
 import bloodbuddy.backend.entity.BloodCentres;
@@ -48,7 +50,7 @@ public class InventoryService {
      * Increment when the row exists, otherwise create it. Always writes an ADD audit row.
      */
     @Transactional
-    public InventoryResponse addAvailability(Long bloodCentreId, AddAvailabilityRequest request, String actor) {
+    public CentreInventoryResponse addAvailability(Long bloodCentreId, AddAvailabilityRequest request, String actor) {
         BloodGroup bloodGroup = requireBloodGroup(request.getBloodGroupId());
         BloodComponents bloodComponent = requireBloodComponent(request.getBloodComponentId());
 
@@ -75,7 +77,7 @@ public class InventoryService {
         inventory = inventoryRepository.save(inventory);
 
         writeAudit(inventory, StockMovement.ADD, request.getUnits(), request.getRemarks(), actor, now);
-        return InventoryResponse.fromEntity(inventory);
+        return getCentreInventory(bloodCentreId);
     }
 
     /**
@@ -83,7 +85,7 @@ public class InventoryService {
      * delta; the resulting available_units must never drop below zero.
      */
     @Transactional
-    public InventoryResponse adjustStock(Long bloodCentreId, StockAdjustmentRequest request, String actor) {
+    public CentreInventoryResponse adjustStock(Long bloodCentreId, StockAdjustmentRequest request, String actor) {
         if (request.getMovement() == StockMovement.ADD) {
             throw new BadRequestException("Use add-availability for ADD movements");
         }
@@ -114,15 +116,20 @@ public class InventoryService {
         inventory = inventoryRepository.save(inventory);
 
         writeAudit(inventory, request.getMovement(), delta, request.getRemarks(), actor, now);
-        return InventoryResponse.fromEntity(inventory);
+        return getCentreInventory(bloodCentreId);
     }
 
+    /** Full centre details plus its stock (each item with group/component names). */
     @Transactional(readOnly = true)
-    public List<InventoryResponse> listCentreStock(Long bloodCentreId) {
-        requireCentre(bloodCentreId); // 404 for an unknown centre rather than a misleading empty list
-        return inventoryRepository.findByBloodCentre_BloodCentreId(bloodCentreId).stream()
+    public CentreInventoryResponse getCentreInventory(Long bloodCentreId) {
+        BloodCentres centre = requireCentre(bloodCentreId);
+        List<InventoryResponse> inventory = inventoryRepository.findByBloodCentre_BloodCentreId(bloodCentreId).stream()
                 .map(InventoryResponse::fromEntity)
                 .toList();
+        return CentreInventoryResponse.builder()
+                .bloodCentre(BloodCentreResponse.fromEntity(centre))
+                .inventory(inventory)
+                .build();
     }
 
     private void writeAudit(Inventory inventory, StockMovement movement, long delta,

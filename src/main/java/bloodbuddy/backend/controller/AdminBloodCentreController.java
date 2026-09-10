@@ -3,7 +3,7 @@ package bloodbuddy.backend.controller;
 import bloodbuddy.backend.common.ApiResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
-import bloodbuddy.backend.dto.inventory.InventoryResponse;
+import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
 import bloodbuddy.backend.dto.inventory.StockAdjustmentRequest;
 import bloodbuddy.backend.security.CustomUserDetails;
 import bloodbuddy.backend.service.BloodCentreService;
@@ -42,28 +42,28 @@ public class AdminBloodCentreController {
     }
 
     @GetMapping("/{bloodCentreId}/inventory")
-    public ResponseEntity<ApiResponse<List<InventoryResponse>>> centreInventory(
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> centreInventory(
             @PathVariable Long bloodCentreId) {
         return ResponseEntity.ok(ApiResponse.success("Inventory fetched",
-                inventoryService.listCentreStock(bloodCentreId)));
+                inventoryService.getCentreInventory(bloodCentreId)));
     }
 
     // Superadmin updates any centre's stock; the target centre comes from the path.
     @PostMapping("/{bloodCentreId}/inventory/add-availability")
-    public ResponseEntity<ApiResponse<InventoryResponse>> addAvailability(
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> addAvailability(
             @PathVariable Long bloodCentreId,
             @Valid @RequestBody AddAvailabilityRequest request,
             @AuthenticationPrincipal CustomUserDetails principal) {
-        InventoryResponse response = inventoryService.addAvailability(bloodCentreId, request, principal.getUsername());
+        CentreInventoryResponse response = inventoryService.addAvailability(bloodCentreId, request, principal.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Availability updated", response));
     }
 
     @PostMapping("/{bloodCentreId}/inventory/stock-adjustment")
-    public ResponseEntity<ApiResponse<InventoryResponse>> adjustStock(
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> adjustStock(
             @PathVariable Long bloodCentreId,
             @Valid @RequestBody StockAdjustmentRequest request,
             @AuthenticationPrincipal CustomUserDetails principal) {
-        InventoryResponse response = inventoryService.adjustStock(bloodCentreId, request, principal.getUsername());
+        CentreInventoryResponse response = inventoryService.adjustStock(bloodCentreId, request, principal.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Stock adjusted", response));
     }
 }

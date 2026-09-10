@@ -39,7 +39,7 @@ app:
     domain:
   cors:
     # Comma-separated allowed origins; "*" allows any origin.
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
 
 #     AWS S3 Configuration
 
@@ -51,5 +51,5 @@ aws:
     bucket-name: ${AWS_BUCKET_NAME:dummy}
 
 superadmin:
-  email: ${SUPERADMIN_EMAIL:admin@tiameds.ai}
-  password: ${SUPERADMIN_PASSWORD:admin123}
+  email: ${SUPERADMIN_EMAIL}
+  password: ${SUPERADMIN_PASSWORD}

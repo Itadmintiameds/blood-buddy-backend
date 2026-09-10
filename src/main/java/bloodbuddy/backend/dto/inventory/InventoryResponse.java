@@ -9,17 +9,19 @@ import lombok.Getter;
 public class InventoryResponse {
 
     private final Long inventoryId;
-    private final Long bloodCentreId;
     private final Long bloodGroupId;
+    private final String bloodGroupName;
     private final Long bloodComponentId;
+    private final String bloodComponentName;
     private final Long availableUnits;
 
     public static InventoryResponse fromEntity(Inventory inventory) {
         return InventoryResponse.builder()
                 .inventoryId(inventory.getInventoryId())
-                .bloodCentreId(inventory.getBloodCentre().getBloodCentreId())
                 .bloodGroupId(inventory.getBloodGroup().getBloodGroupId())
+                .bloodGroupName(inventory.getBloodGroup().getBloodGroupName())
                 .bloodComponentId(inventory.getBloodComponent().getBloodComponentId())
+                .bloodComponentName(inventory.getBloodComponent().getBloodComponentName())
                 .availableUnits(inventory.getAvailableUnits())
                 .build();
     }

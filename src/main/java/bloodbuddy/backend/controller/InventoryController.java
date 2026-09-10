@@ -2,7 +2,7 @@ package bloodbuddy.backend.controller;
 
 import bloodbuddy.backend.common.ApiResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
-import bloodbuddy.backend.dto.inventory.InventoryResponse;
+import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
 import bloodbuddy.backend.dto.inventory.StockAdjustmentRequest;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.security.CustomUserDetails;
@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /** Blood-centre staff manage their own centre's stock; the centre comes from the token.
  *  Superadmin operates on any centre via /admin/blood-centres/{id}/inventory/*. */
@@ -33,26 +31,26 @@ public class InventoryController {
     }
 
     @PostMapping("/add-availability")
-    public ResponseEntity<ApiResponse<InventoryResponse>> addAvailability(
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> addAvailability(
             @Valid @RequestBody AddAvailabilityRequest request,
             @AuthenticationPrincipal CustomUserDetails principal) {
-        InventoryResponse response = inventoryService.addAvailability(ownCentre(principal), request, principal.getUsername());
+        CentreInventoryResponse response = inventoryService.addAvailability(ownCentre(principal), request, principal.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Availability updated", response));
     }
 
     @PostMapping("/stock-adjustment")
-    public ResponseEntity<ApiResponse<InventoryResponse>> adjustStock(
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> adjustStock(
             @Valid @RequestBody StockAdjustmentRequest request,
             @AuthenticationPrincipal CustomUserDetails principal) {
-        InventoryResponse response = inventoryService.adjustStock(ownCentre(principal), request, principal.getUsername());
+        CentreInventoryResponse response = inventoryService.adjustStock(ownCentre(principal), request, principal.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Stock adjusted", response));
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<InventoryResponse>>> listStock(
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> listStock(
             @AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.ok(ApiResponse.success("Stock fetched",
-                inventoryService.listCentreStock(ownCentre(principal))));
+                inventoryService.getCentreInventory(ownCentre(principal))));
     }
 
     // Staff may only touch their own centre; the centre id comes from the token, never the client.
