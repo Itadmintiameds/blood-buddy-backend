@@ -11,6 +11,10 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
 
     Optional<Users> findByUsername(String username);
 
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
+
     // Eager-fetch role and centre so authorities/centre-id are available outside
     // the load transaction (login + token generation).
     @Query("SELECT u FROM Users u LEFT JOIN FETCH u.role LEFT JOIN FETCH u.bloodCentre WHERE u.username = :username")

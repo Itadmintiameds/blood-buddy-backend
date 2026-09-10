@@ -46,3 +46,7 @@ aws:
     secret-key: ${AWS_SECRET_KEY:dummy}
     region: ${AWS_REGION:ap-south-1}
     bucket-name: ${AWS_BUCKET_NAME:dummy}
+
+superadmin:
+  email: ${SUPERADMIN_EMAIL:admin@tiameds.ai}
+  password: ${SUPERADMIN_PASSWORD:admin123}
