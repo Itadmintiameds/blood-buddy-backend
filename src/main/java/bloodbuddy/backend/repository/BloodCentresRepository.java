@@ -4,4 +4,6 @@ import bloodbuddy.backend.entity.BloodCentres;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BloodCentresRepository extends JpaRepository<BloodCentres, Long> {
+
+    boolean existsByEmail(String email);
 }
