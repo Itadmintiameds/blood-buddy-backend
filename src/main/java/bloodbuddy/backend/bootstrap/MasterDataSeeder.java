@@ -29,10 +29,11 @@ public class MasterDataSeeder implements CommandLineRunner {
 
     // component name -> shelf life in days (informational; no expiry job runs yet)
     private static final List<BloodComponentSeed> BLOOD_COMPONENTS = List.of(
+            new BloodComponentSeed("Packed Red Blood Cells (PRBC)", 42),
+            new BloodComponentSeed("Random Donor Platelets (RDP)", 5),
+            new BloodComponentSeed("Single Donor Platelets (SDP)", 5),
+            new BloodComponentSeed("Fresh Frozen Plasma (FFP)", 365),
             new BloodComponentSeed("Whole Blood", 35),
-            new BloodComponentSeed("Packed Red Blood Cells", 42),
-            new BloodComponentSeed("Fresh Frozen Plasma", 365),
-            new BloodComponentSeed("Platelet Concentrate", 5),
             new BloodComponentSeed("Cryoprecipitate", 365));
 
     private final BloodGroupRepository bloodGroupRepository;
