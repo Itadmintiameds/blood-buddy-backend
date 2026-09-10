@@ -3,6 +3,7 @@ package bloodbuddy.backend.service;
 import bloodbuddy.backend.constants.RoleNames;
 import bloodbuddy.backend.dto.centre.BloodCentreRegistrationRequest;
 import bloodbuddy.backend.dto.centre.BloodCentreRegistrationResponse;
+import bloodbuddy.backend.dto.centre.BloodCentreResponse;
 import bloodbuddy.backend.entity.BloodCentres;
 import bloodbuddy.backend.entity.Users;
 import bloodbuddy.backend.entity.masters.Roles;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,13 @@ public class BloodCentreService {
      * and SUPERADMIN-created centres; the created account's role is always fixed to
      * BLOOD_CENTRE regardless of caller, so a self-registering centre cannot elevate itself.
      */
+    @Transactional(readOnly = true)
+    public List<BloodCentreResponse> listAll() {
+        return bloodCentresRepository.findAll().stream()
+                .map(BloodCentreResponse::fromEntity)
+                .toList();
+    }
+
     @Transactional
     public BloodCentreRegistrationResponse register(BloodCentreRegistrationRequest request, String actor) {
         // Registration is gated on a prior OTP verification of this email.

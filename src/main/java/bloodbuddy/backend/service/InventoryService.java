@@ -119,6 +119,7 @@ public class InventoryService {
 
     @Transactional(readOnly = true)
     public List<InventoryResponse> listCentreStock(Long bloodCentreId) {
+        requireCentre(bloodCentreId); // 404 for an unknown centre rather than a misleading empty list
         return inventoryRepository.findByBloodCentre_BloodCentreId(bloodCentreId).stream()
                 .map(InventoryResponse::fromEntity)
                 .toList();

@@ -81,10 +81,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public: health, donor self-registration, recipient request, login, refresh.
                         .requestMatchers("/public/**", "/auth/login", "/auth/refresh").permitAll()
-                        // Blood-centre staff manage their own stock.
-                        .requestMatchers("/inventory/**").hasRole("BLOOD_CENTRE")
-                        // Superadmin handles donor outreach and cross-centre admin operations.
-                        .requestMatchers("/admin/**").hasRole("SUPERADMIN")
+                        // Everything else needs a valid token; per-endpoint role checks live on the
+                        // controllers via @PreAuthorize so new roles are easy to add without touching this config.
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
