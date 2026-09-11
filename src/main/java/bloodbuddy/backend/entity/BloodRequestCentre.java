@@ -17,18 +17,19 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/** A blood centre surfaced to the recipient's request at submission (location + matching stock). */
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "blood_request_details")
-public class BloodRequestDetails {
+@Table(name = "blood_request_centre")
+public class BloodRequestCentre {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "blood_request_details_id")
-    private Long bloodRequestDetailsId;
+    @Column(name = "blood_request_centre_id")
+    private Long bloodRequestCentreId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blood_request_id")
@@ -40,26 +41,9 @@ public class BloodRequestDetails {
     @JsonIgnore
     private BloodCentres bloodCentre;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "blood_donor_details_id")
-    @JsonIgnore
-    private BloodDonorDetails bloodDonorDetails;
-
-    @Column(name = "status")
-    private String status;
-
-    @Column(name = "remarks")
-    private String remarks;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "matched_at")
+    private LocalDateTime matchedAt;
 
     @Column(name = "created_by")
     private String createdBy;
-
-    @Column(name = "modified_at")
-    private LocalDateTime modifiedAt;
-
-    @Column(name = "modified_by")
-    private String modifiedBy;
 }

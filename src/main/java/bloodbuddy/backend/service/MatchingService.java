@@ -2,10 +2,10 @@ package bloodbuddy.backend.service;
 
 import bloodbuddy.backend.entity.BloodCentres;
 import bloodbuddy.backend.entity.BloodRequest;
-import bloodbuddy.backend.entity.BloodRequestDetails;
+import bloodbuddy.backend.entity.BloodRequestCentre;
 import bloodbuddy.backend.entity.Inventory;
 import bloodbuddy.backend.entity.Notification;
-import bloodbuddy.backend.repository.BloodRequestDetailsRepository;
+import bloodbuddy.backend.repository.BloodRequestCentreRepository;
 import bloodbuddy.backend.repository.InventoryRepository;
 import bloodbuddy.backend.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
@@ -20,16 +20,16 @@ public class MatchingService {
     private static final String SYSTEM_ACTOR = "SYSTEM";
 
     private final InventoryRepository inventoryRepository;
-    private final BloodRequestDetailsRepository bloodRequestDetailsRepository;
+    private final BloodRequestCentreRepository bloodRequestCentreRepository;
     private final NotificationRepository notificationRepository;
     private final NotificationService notificationService;
 
     public MatchingService(InventoryRepository inventoryRepository,
-                           BloodRequestDetailsRepository bloodRequestDetailsRepository,
+                           BloodRequestCentreRepository bloodRequestCentreRepository,
                            NotificationRepository notificationRepository,
                            NotificationService notificationService) {
         this.inventoryRepository = inventoryRepository;
-        this.bloodRequestDetailsRepository = bloodRequestDetailsRepository;
+        this.bloodRequestCentreRepository = bloodRequestCentreRepository;
         this.notificationRepository = notificationRepository;
         this.notificationService = notificationService;
     }
@@ -55,16 +55,14 @@ public class MatchingService {
         LocalDateTime now = LocalDateTime.now();
         List<BloodCentres> matchedCentres = matches.stream().map(Inventory::getBloodCentre).toList();
 
-        // One detail row per matched centre: centre set, donor null (match path).
+        // One row per matched centre surfaced to this request.
         for (BloodCentres centre : matchedCentres) {
-            BloodRequestDetails details = new BloodRequestDetails();
-            details.setBloodRequest(request);
-            details.setBloodCentre(centre);
-            details.setBloodDonorDetails(null);
-            details.setStatus("sent");
-            details.setCreatedAt(now);
-            details.setCreatedBy(SYSTEM_ACTOR);
-            bloodRequestDetailsRepository.save(details);
+            BloodRequestCentre match = new BloodRequestCentre();
+            match.setBloodRequest(request);
+            match.setBloodCentre(centre);
+            match.setMatchedAt(now);
+            match.setCreatedBy(SYSTEM_ACTOR);
+            bloodRequestCentreRepository.save(match);
         }
 
         // One notification per request (one message); the message lists every matched centre,

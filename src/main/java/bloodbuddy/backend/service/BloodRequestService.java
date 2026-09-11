@@ -3,6 +3,7 @@ package bloodbuddy.backend.service;
 import bloodbuddy.backend.dto.request.BloodRequestResponse;
 import bloodbuddy.backend.dto.request.BloodRequestSubmission;
 import bloodbuddy.backend.entity.BloodRequest;
+import bloodbuddy.backend.entity.BloodRequestStatus;
 import bloodbuddy.backend.entity.masters.BloodComponents;
 import bloodbuddy.backend.entity.masters.BloodGroup;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
@@ -57,6 +58,10 @@ public class BloodRequestService {
 
         int matchedCentres = matchingService.matchAndNotify(request);
 
+        request.setStatus(matchedCentres > 0
+                ? BloodRequestStatus.CENTRES_FOUND
+                : BloodRequestStatus.NO_CENTRES_FOUND);
+
         String message = matchedCentres > 0
                 ? "Request matched with " + matchedCentres + " blood centre(s); they are being notified"
                 : "No centre matched; our team will arrange donor outreach";
@@ -65,6 +70,7 @@ public class BloodRequestService {
                 .bloodRequestId(request.getBloodRequestId())
                 .matched(matchedCentres > 0)
                 .matchedCentreCount(matchedCentres)
+                .status(request.getStatus())
                 .message(message)
                 .build();
     }

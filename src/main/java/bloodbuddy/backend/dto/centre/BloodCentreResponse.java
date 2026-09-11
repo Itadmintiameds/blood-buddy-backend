@@ -17,6 +17,9 @@ public class BloodCentreResponse {
     private final String district;
     private final String city;
     private final String pincode;
+    private final Double latitude;
+    private final Double longitude;
+    private final String locationUrl;
     private final Boolean isActive;
 
     public static BloodCentreResponse fromEntity(BloodCentres centre) {
@@ -30,6 +33,9 @@ public class BloodCentreResponse {
                 .district(centre.getDistrict())
                 .city(centre.getCity())
                 .pincode(centre.getPincode())
+                .latitude(centre.getLatitude())
+                .longitude(centre.getLongitude())
+                .locationUrl(centre.getLocationUrl())
                 .isActive(centre.getIsActive())
                 .build();
     }
