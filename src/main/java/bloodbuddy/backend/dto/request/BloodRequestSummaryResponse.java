@@ -1,6 +1,5 @@
 package bloodbuddy.backend.dto.request;
 
-import bloodbuddy.backend.entity.BloodRequest;
 import bloodbuddy.backend.entity.BloodRequestStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,20 +22,4 @@ public class BloodRequestSummaryResponse {
     private final String pincode;
     private final BloodRequestStatus status;
     private final LocalDateTime createdAt;
-
-    public static BloodRequestSummaryResponse fromEntity(BloodRequest request) {
-        return BloodRequestSummaryResponse.builder()
-                .bloodRequestId(request.getBloodRequestId())
-                .recipientName(request.getRecipientName())
-                .mobileNumber(request.getMobileNumber())
-                .bloodGroupName(request.getBloodGroup() != null ? request.getBloodGroup().getBloodGroupName() : null)
-                .bloodComponentName(request.getBloodComponent() != null ? request.getBloodComponent().getBloodComponentName() : null)
-                .requiredUnits(request.getRequiredUnits())
-                .city(request.getCity())
-                .district(request.getDistrict())
-                .pincode(request.getPincode())
-                .status(request.getStatus())
-                .createdAt(request.getCreatedAt())
-                .build();
-    }
 }

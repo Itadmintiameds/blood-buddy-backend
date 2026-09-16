@@ -2,7 +2,6 @@ package bloodbuddy.backend.dto.request;
 
 import bloodbuddy.backend.dto.centre.BloodCentreResponse;
 import bloodbuddy.backend.dto.donor.DonorResponse;
-import bloodbuddy.backend.entity.BloodRequest;
 import bloodbuddy.backend.entity.BloodRequestStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,32 +37,4 @@ public class BloodRequestDetailResponse {
     private final List<BloodCentreResponse> matchedCentres;
     private final List<DonorResponse> donatedBy;
     private final List<DonorResponse> donorCandidates;
-
-    public static BloodRequestDetailResponse fromEntity(BloodRequest request,
-                                                        List<BloodCentreResponse> matchedCentres,
-                                                        List<DonorResponse> donatedBy,
-                                                        List<DonorResponse> donorCandidates) {
-        return BloodRequestDetailResponse.builder()
-                .bloodRequestId(request.getBloodRequestId())
-                .recipientName(request.getRecipientName())
-                .mobileNumber(request.getMobileNumber())
-                .bloodGroupId(request.getBloodGroup() != null ? request.getBloodGroup().getBloodGroupId() : null)
-                .bloodGroupName(request.getBloodGroup() != null ? request.getBloodGroup().getBloodGroupName() : null)
-                .bloodComponentId(request.getBloodComponent() != null ? request.getBloodComponent().getBloodComponentId() : null)
-                .bloodComponentName(request.getBloodComponent() != null ? request.getBloodComponent().getBloodComponentName() : null)
-                .requiredUnits(request.getRequiredUnits())
-                .dob(request.getDob())
-                .hospitalName(request.getHospitalName())
-                .address(request.getAddress())
-                .city(request.getCity())
-                .district(request.getDistrict())
-                .pincode(request.getPincode())
-                .status(request.getStatus())
-                .remarks(request.getRemarks())
-                .createdAt(request.getCreatedAt())
-                .matchedCentres(matchedCentres)
-                .donatedBy(donatedBy)
-                .donorCandidates(donorCandidates)
-                .build();
-    }
 }

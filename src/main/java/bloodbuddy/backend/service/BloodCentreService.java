@@ -9,6 +9,7 @@ import bloodbuddy.backend.entity.Users;
 import bloodbuddy.backend.entity.masters.Roles;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
+import bloodbuddy.backend.mapper.BloodCentreMapper;
 import bloodbuddy.backend.repository.BloodCentresRepository;
 import bloodbuddy.backend.repository.RolesRepository;
 import bloodbuddy.backend.repository.UsersRepository;
@@ -38,7 +39,7 @@ public class BloodCentreService {
     @Transactional(readOnly = true)
     public List<BloodCentreResponse> listAll() {
         return bloodCentresRepository.findAll().stream()
-                .map(BloodCentreResponse::fromEntity)
+                .map(BloodCentreMapper::toResponse)
                 .toList();
     }
 

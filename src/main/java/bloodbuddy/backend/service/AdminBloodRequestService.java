@@ -12,6 +12,9 @@ import bloodbuddy.backend.entity.BloodRequestDonation;
 import bloodbuddy.backend.entity.BloodRequestStatus;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
+import bloodbuddy.backend.mapper.BloodCentreMapper;
+import bloodbuddy.backend.mapper.BloodRequestMapper;
+import bloodbuddy.backend.mapper.DonorMapper;
 import bloodbuddy.backend.repository.BloodDonorDetailsRepository;
 import bloodbuddy.backend.repository.BloodRequestCentreRepository;
 import bloodbuddy.backend.repository.BloodRequestDonationRepository;
@@ -45,14 +48,14 @@ public class AdminBloodRequestService {
     @Transactional(readOnly = true)
     public List<BloodRequestSummaryResponse> listAll() {
         return bloodRequestRepository.findAll().stream()
-                .map(BloodRequestSummaryResponse::fromEntity)
+                .map(BloodRequestMapper::toSummaryResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public PagedResponse<BloodRequestSummaryResponse> list(Pageable pageable) {
         return PagedResponse.fromPage(
-                bloodRequestRepository.findAll(pageable).map(BloodRequestSummaryResponse::fromEntity));
+                bloodRequestRepository.findAll(pageable).map(BloodRequestMapper::toSummaryResponse));
     }
 
     @Transactional(readOnly = true)
@@ -98,13 +101,13 @@ public class AdminBloodRequestService {
         List<BloodCentreResponse> matchedCentres = bloodRequestCentreRepository
                 .findByBloodRequest_BloodRequestId(request.getBloodRequestId()).stream()
                 .map(BloodRequestCentre::getBloodCentre)
-                .map(BloodCentreResponse::fromEntity)
+                .map(BloodCentreMapper::toResponse)
                 .toList();
 
         List<DonorResponse> donatedBy = bloodRequestDonationRepository
                 .findByBloodRequest_BloodRequestId(request.getBloodRequestId()).stream()
                 .map(BloodRequestDonation::getBloodDonorDetails)
-                .map(DonorResponse::fromEntity)
+                .map(DonorMapper::toResponse)
                 .toList();
 
         // Only surface donor candidates when no centre matched; otherwise the centres are the answer.
@@ -114,11 +117,11 @@ public class AdminBloodRequestService {
                         request.getPincode(),
                         request.getCity(),
                         request.getDistrict()).stream()
-                        .map(DonorResponse::fromEntity)
+                        .map(DonorMapper::toResponse)
                         .toList()
                 : List.of();
 
-        return BloodRequestDetailResponse.fromEntity(request, matchedCentres, donatedBy, donorCandidates);
+        return BloodRequestMapper.toDetailResponse(request, matchedCentres, donatedBy, donorCandidates);
     }
 
     private BloodRequest requireRequest(Long bloodRequestId) {

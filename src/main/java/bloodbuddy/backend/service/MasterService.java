@@ -3,6 +3,9 @@ package bloodbuddy.backend.service;
 import bloodbuddy.backend.dto.master.BloodComponentResponse;
 import bloodbuddy.backend.dto.master.BloodGroupResponse;
 import bloodbuddy.backend.dto.master.RoleResponse;
+import bloodbuddy.backend.mapper.BloodComponentMapper;
+import bloodbuddy.backend.mapper.BloodGroupMapper;
+import bloodbuddy.backend.mapper.RoleMapper;
 import bloodbuddy.backend.repository.BloodComponentsRepository;
 import bloodbuddy.backend.repository.BloodGroupRepository;
 import bloodbuddy.backend.repository.RolesRepository;
@@ -29,21 +32,21 @@ public class MasterService {
     @Transactional(readOnly = true)
     public List<BloodGroupResponse> getBloodGroups() {
         return bloodGroupRepository.findAll().stream()
-                .map(BloodGroupResponse::fromEntity)
+                .map(BloodGroupMapper::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<BloodComponentResponse> getBloodComponents() {
         return bloodComponentsRepository.findAll().stream()
-                .map(BloodComponentResponse::fromEntity)
+                .map(BloodComponentMapper::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<RoleResponse> getRoles() {
         return rolesRepository.findAll().stream()
-                .map(RoleResponse::fromEntity)
+                .map(RoleMapper::toResponse)
                 .toList();
     }
 }

@@ -6,6 +6,7 @@ import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.entity.BloodDonorDetails;
 import bloodbuddy.backend.entity.masters.BloodGroup;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
+import bloodbuddy.backend.mapper.DonorMapper;
 import bloodbuddy.backend.repository.BloodDonorDetailsRepository;
 import bloodbuddy.backend.repository.BloodGroupRepository;
 import org.springframework.data.domain.Page;
@@ -47,19 +48,19 @@ public class DonorService {
         donor.setCreatedAt(LocalDateTime.now());
         donor.setCreatedBy("SELF");
 
-        return DonorResponse.fromEntity(bloodDonorDetailsRepository.save(donor));
+        return DonorMapper.toResponse(bloodDonorDetailsRepository.save(donor));
     }
 
     @Transactional(readOnly = true)
     public List<DonorResponse> listAll() {
         return bloodDonorDetailsRepository.findAll().stream()
-                .map(DonorResponse::fromEntity)
+                .map(DonorMapper::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public PagedResponse<DonorResponse> list(Pageable pageable) {
         return PagedResponse.fromPage(
-                bloodDonorDetailsRepository.findAll(pageable).map(DonorResponse::fromEntity));
+                bloodDonorDetailsRepository.findAll(pageable).map(DonorMapper::toResponse));
     }
 }

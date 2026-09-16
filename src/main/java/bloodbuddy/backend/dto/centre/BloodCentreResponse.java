@@ -1,6 +1,5 @@
 package bloodbuddy.backend.dto.centre;
 
-import bloodbuddy.backend.entity.BloodCentres;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,22 +20,4 @@ public class BloodCentreResponse {
     private final Double longitude;
     private final String locationUrl;
     private final Boolean isActive;
-
-    public static BloodCentreResponse fromEntity(BloodCentres centre) {
-        return BloodCentreResponse.builder()
-                .bloodCentreId(centre.getBloodCentreId())
-                .bloodCentreName(centre.getBloodCentreName())
-                .bloodBankCategory(centre.getBloodBankCategory())
-                .mobileNumber(centre.getMobileNumber())
-                .email(centre.getEmail())
-                .address(centre.getAddress())
-                .district(centre.getDistrict())
-                .city(centre.getCity())
-                .pincode(centre.getPincode())
-                .latitude(centre.getLatitude())
-                .longitude(centre.getLongitude())
-                .locationUrl(centre.getLocationUrl())
-                .isActive(centre.getIsActive())
-                .build();
-    }
 }

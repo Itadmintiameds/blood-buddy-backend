@@ -1,6 +1,5 @@
 package bloodbuddy.backend.service;
 
-import bloodbuddy.backend.dto.centre.BloodCentreResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
 import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
 import bloodbuddy.backend.dto.inventory.InventoryResponse;
@@ -13,6 +12,8 @@ import bloodbuddy.backend.entity.masters.BloodGroup;
 import bloodbuddy.backend.enums.StockMovement;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
+import bloodbuddy.backend.mapper.BloodCentreMapper;
+import bloodbuddy.backend.mapper.InventoryMapper;
 import bloodbuddy.backend.repository.BloodCentresRepository;
 import bloodbuddy.backend.repository.BloodComponentsRepository;
 import bloodbuddy.backend.repository.BloodGroupRepository;
@@ -124,10 +125,10 @@ public class InventoryService {
     public CentreInventoryResponse getCentreInventory(Long bloodCentreId) {
         BloodCentres centre = requireCentre(bloodCentreId);
         List<InventoryResponse> inventory = inventoryRepository.findByBloodCentre_BloodCentreId(bloodCentreId).stream()
-                .map(InventoryResponse::fromEntity)
+                .map(InventoryMapper::toResponse)
                 .toList();
         return CentreInventoryResponse.builder()
-                .bloodCentre(BloodCentreResponse.fromEntity(centre))
+                .bloodCentre(BloodCentreMapper.toResponse(centre))
                 .inventory(inventory)
                 .build();
     }
