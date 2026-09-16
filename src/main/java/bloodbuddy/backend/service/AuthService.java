@@ -9,6 +9,7 @@ import bloodbuddy.backend.repository.UsersRepository;
 import bloodbuddy.backend.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,15 +22,21 @@ public class AuthService {
     private final UsersRepository usersRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final EmailVerificationService emailVerificationService;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthService(AuthenticationManager authenticationManager,
                        UsersRepository usersRepository,
                        JwtService jwtService,
-                       RefreshTokenService refreshTokenService) {
+                       RefreshTokenService refreshTokenService,
+                       EmailVerificationService emailVerificationService,
+                       PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.usersRepository = usersRepository;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.emailVerificationService = emailVerificationService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -58,6 +65,32 @@ public class AuthService {
     @Transactional
     public void logout(Long userId) {
         refreshTokenService.revokeAllForUser(userId);
+    }
+
+    /** Step 1: email a password-reset OTP the user will use to set a new password. */
+    @Transactional
+    public void forgotPassword(String email) {
+        emailVerificationService.sendPasswordResetOtp(email);
+    }
+
+    /**
+     * Step 2: with a valid OTP, set the new password. The OTP is consumed and all existing refresh
+     * tokens are revoked so any session opened before the reset can no longer mint access tokens.
+     */
+    @Transactional
+    public void resetPassword(String email, String otp, String newPassword) {
+        emailVerificationService.verifyPasswordResetOtp(email, otp);
+
+        Users user = usersRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("No account found for this email"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setModifiedAt(LocalDateTime.now());
+        user.setModifiedBy("PASSWORD_RESET");
+        usersRepository.save(user);
+
+        refreshTokenService.revokeAllForUser(user.getUserId());
+        emailVerificationService.clearPasswordReset(email);
     }
 
     private AuthResponse buildResponse(Users user, String refreshTokenValue) {

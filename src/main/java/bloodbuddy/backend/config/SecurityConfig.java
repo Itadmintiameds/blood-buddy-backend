@@ -79,8 +79,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public: health, donor self-registration, recipient request, login, refresh.
-                        .requestMatchers("/public/**", "/auth/login", "/auth/refresh").permitAll()
+                        // Public: health, donor self-registration, recipient request, login, refresh, password reset.
+                        .requestMatchers("/public/**", "/auth/login", "/auth/refresh",
+                                "/auth/forgot-password", "/auth/reset-password").permitAll()
                         // Everything else needs a valid token; per-endpoint role checks live on the
                         // controllers via @PreAuthorize so new roles are easy to add without touching this config.
                         .anyRequest().authenticated())

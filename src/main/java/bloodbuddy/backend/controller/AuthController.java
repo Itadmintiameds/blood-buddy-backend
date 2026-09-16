@@ -2,8 +2,10 @@ package bloodbuddy.backend.controller;
 
 import bloodbuddy.backend.common.ApiResponse;
 import bloodbuddy.backend.dto.auth.AuthResponse;
+import bloodbuddy.backend.dto.auth.ForgotPasswordRequest;
 import bloodbuddy.backend.dto.auth.LoginRequest;
 import bloodbuddy.backend.dto.auth.RefreshRequest;
+import bloodbuddy.backend.dto.auth.ResetPasswordRequest;
 import bloodbuddy.backend.security.CustomUserDetails;
 import bloodbuddy.backend.service.AuthService;
 import jakarta.validation.Valid;
@@ -40,5 +42,19 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal CustomUserDetails principal) {
         authService.logout(principal.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Logout successful"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        // Generic response regardless of whether the email is registered (no account enumeration).
+        return ResponseEntity.ok(ApiResponse.success(
+                "If an account exists for this email, a password reset OTP has been sent"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password has been reset; please log in with your new password"));
     }
 }
