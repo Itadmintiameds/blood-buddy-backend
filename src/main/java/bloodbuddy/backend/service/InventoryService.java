@@ -2,6 +2,7 @@ package bloodbuddy.backend.service;
 
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
 import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
+import bloodbuddy.backend.dto.inventory.InventoryAuditResponse;
 import bloodbuddy.backend.dto.inventory.InventoryResponse;
 import bloodbuddy.backend.dto.inventory.StockAdjustmentRequest;
 import bloodbuddy.backend.entity.BloodCentres;
@@ -131,6 +132,22 @@ public class InventoryService {
                 .bloodCentre(BloodCentreMapper.toResponse(centre))
                 .inventory(inventory)
                 .build();
+    }
+
+    /**
+     * Stock ledger for a single inventory row, newest movement first. The row must belong to
+     * the caller's centre, otherwise it is treated as not found.
+     */
+    @Transactional(readOnly = true)
+    public List<InventoryAuditResponse> getInventoryHistory(Long bloodCentreId, Long inventoryId) {
+        List<InventoryAudit> history = inventoryAuditRepository.findInventoryHistory(bloodCentreId, inventoryId);
+        if (history.isEmpty()
+                && !inventoryRepository.existsByInventoryIdAndBloodCentre_BloodCentreId(inventoryId, bloodCentreId)) {
+            throw new ResourceNotFoundException("No inventory row found for id " + inventoryId + " at this centre");
+        }
+        return history.stream()
+                .map(InventoryMapper::toAuditResponse)
+                .toList();
     }
 
     private void writeAudit(Inventory inventory, StockMovement movement, long delta,

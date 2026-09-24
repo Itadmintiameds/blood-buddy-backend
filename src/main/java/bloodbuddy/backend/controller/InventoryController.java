@@ -3,6 +3,7 @@ package bloodbuddy.backend.controller;
 import bloodbuddy.backend.common.ApiResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
 import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
+import bloodbuddy.backend.dto.inventory.InventoryAuditResponse;
 import bloodbuddy.backend.dto.inventory.StockAdjustmentRequest;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.security.CustomUserDetails;
@@ -12,10 +13,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /** Blood-centre staff manage their own centre's stock; the centre comes from the token.
  *  Superadmin operates on any centre via /admin/blood-centres/{id}/inventory/*. */
@@ -51,6 +55,15 @@ public class InventoryController {
             @AuthenticationPrincipal CustomUserDetails principal) {
         return ResponseEntity.ok(ApiResponse.success("Stock fetched",
                 inventoryService.getCentreInventory(ownCentre(principal))));
+    }
+
+    /** Stock movement ledger for a single inventory row (newest first). */
+    @GetMapping("/{inventoryId}/history")
+    public ResponseEntity<ApiResponse<List<InventoryAuditResponse>>> stockHistory(
+            @PathVariable Long inventoryId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Stock history fetched",
+                inventoryService.getInventoryHistory(ownCentre(principal), inventoryId)));
     }
 
     // Staff may only touch their own centre; the centre id comes from the token, never the client.
