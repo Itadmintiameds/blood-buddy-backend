@@ -1,20 +1,20 @@
 jwt:
-  secret-key: 1234567890123456789012345678901234567890
+  secret-key: ${JWT_SECRET}
   access-token-expiry: 1800000
   refresh-token-expiry: 604800000
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/blood_buddy
-    username: postgres
-    password: root
+    url: jdbc:postgresql://${DB_URL:localhost}:5432/${DB_NAME:blood_buddy}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: itadmin@tiameds.ai
-    password: ugejmrtofdxpgarn
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
 
     properties:
       mail:
