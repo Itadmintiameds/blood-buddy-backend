@@ -1,68 +1,68 @@
-name: Deploy Blood Buddy Test
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - test
-
-permissions:
-  id-token: write
-  contents: read
-
-env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: blood-buddy-test
-  ECS_CLUSTER: blood-buddy-test-cluster
-  ECS_SERVICE: blood-buddy-test-service
-  ECS_TASK_DEFINITION: blood-buddy-test-task
-  CONTAINER_NAME: blood-buddy-backend
+  workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Build and Deploy Test
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-
-      # 1. Checkout source code
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Authenticate GitHub Actions with AWS
+      # Step 2: Set up JDK 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      # Step 3: Build with Maven
+      - name: Build with Maven
+        run: mvn -DskipTests clean install
+
+      # Step 4: Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::977098986605:role/bengaluru-team
-          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # 3. Login to Amazon ECR
-      - name: Login to Amazon ECR
-        id: login-ecr
+      # Step 5: Login to Amazon ECR
+      - name: Log in to Amazon ECR
+        id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 4. Build Docker image
-      - name: Build Docker image
+      # Step 6: Build and push Docker image
+      - name: Build and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build \
-            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:test \
-            .
+          echo "Building Docker image..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
 
-      # 5. Push Docker image to ECR
-      - name: Push Docker image
-        run: |
-          docker push \
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:test
+          echo "Pushing Docker image..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # 6. Download current ECS task definition
-      - name: Download ECS task definition
+      # Step 7: Get current ECS task definition
+      - name: Download ECS Task Definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+            --task-definition blood-buddy-test-task \
             --query taskDefinition \
             > task-definition.json
 
-      # 7. Remove fields ECS doesn't accept during registration
-      - name: Clean task definition
+      # Step 8: Clean task definition
+      - name: Clean Task Definition
         run: |
           python - <<'PY'
           import json
@@ -85,20 +85,20 @@ jobs:
               json.dump(task, f, indent=2)
           PY
 
-      # 8. Update container image
-      - name: Update ECS task definition image
-        id: task-def
+      # Step 9: Update container image
+      - name: Update ECS Task Definition
+        id: update-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:test
+          container-name: blood-buddy-backend
+          image: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      # 9. Register new task definition and deploy
+      # Step 10: Deploy to ECS
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
+          task-definition: ${{ steps.update-task-def.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
           wait-for-service-stability: true
