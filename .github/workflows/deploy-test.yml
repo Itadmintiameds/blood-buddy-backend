@@ -1,0 +1,104 @@
+name: Deploy Blood Buddy Test
+
+on:
+  push:
+    branches:
+      - test
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: blood-buddy-test
+  ECS_CLUSTER: blood-buddy-test-cluster
+  ECS_SERVICE: blood-buddy-test-service
+  ECS_TASK_DEFINITION: blood-buddy-test-task
+  CONTAINER_NAME: blood-buddy-backend
+
+jobs:
+  deploy:
+    name: Build and Deploy Test
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # 1. Checkout source code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Authenticate GitHub Actions with AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::977098986605:role/bengaluru-team
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3. Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 4. Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:test \
+            .
+
+      # 5. Push Docker image to ECR
+      - name: Push Docker image
+        run: |
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:test
+
+      # 6. Download current ECS task definition
+      - name: Download ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+            --query taskDefinition \
+            > task-definition.json
+
+      # 7. Remove fields ECS doesn't accept during registration
+      - name: Clean task definition
+        run: |
+          python - <<'PY'
+          import json
+
+          with open("task-definition.json") as f:
+              task = json.load(f)
+
+          for key in [
+              "taskDefinitionArn",
+              "revision",
+              "status",
+              "requiresAttributes",
+              "compatibilities",
+              "registeredAt",
+              "registeredBy"
+          ]:
+              task.pop(key, None)
+
+          with open("task-definition.json", "w") as f:
+              json.dump(task, f, indent=2)
+          PY
+
+      # 8. Update container image
+      - name: Update ECS task definition image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:test
+
+      # 9. Register new task definition and deploy
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

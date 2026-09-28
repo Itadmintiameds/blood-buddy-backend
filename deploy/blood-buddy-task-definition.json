@@ -1,0 +1,141 @@
+{
+  "taskDefinitionArn": "arn:aws:ecs:ap-south-1:977098986605:task-definition/blood-buddy-test-task:1",
+  "containerDefinitions": [
+    {
+      "name": "blood-buddy-backend",
+      "image": "977098986605.dkr.ecr.ap-south-1.amazonaws.com/blood-buddy-test",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "name": "blood-buddy-backend-8080-tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "test"
+        }
+      ],
+      "environmentFiles": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "secrets": [
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:JWT_SECRET::"
+        },
+        {
+          "name": "DB_URL",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:DB_URL::"
+        },
+        {
+          "name": "DB_PORT",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:DB_PORT::"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:DB_USERNAME::"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:DB_PASSWORD::"
+        },
+        {
+          "name": "DB_NAME",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:DB_NAME::"
+        },
+        {
+          "name": "SPRING_MAIL_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:SPRING_MAIL_USERNAME::"
+        },
+        {
+          "name": "SPRING_MAIL_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:SPRING_MAIL_PASSWORD::"
+        },
+        {
+          "name": "APP_CORS_ALLOWED_ORIGINS",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:APP_CORS_ALLOWED_ORIGINS::"
+        },
+        {
+          "name": "SUPERADMIN_EMAIL",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:SUPERADMIN_EMAIL::"
+        },
+        {
+          "name": "SUPERADMIN_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:SUPERADMIN_PASSWORD::"
+        }
+      ],
+      "ulimits": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/blood-buddy-test",
+          "awslogs-create-group": "true",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        },
+        "secretOptions": []
+      },
+      "systemControls": []
+    }
+  ],
+  "family": "blood-buddy-test-task",
+  "executionRoleArn": "arn:aws:iam::977098986605:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "revision": 1,
+  "volumes": [],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+    {
+      "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+    },
+    {
+      "name": "ecs.capability.execution-role-awslogs"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.ecr-auth"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+    },
+    {
+      "name": "ecs.capability.secrets.asm.environment-variables"
+    },
+    {
+      "name": "ecs.capability.execution-role-ecr-pull"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    },
+    {
+      "name": "ecs.capability.task-eni"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+    }
+  ],
+  "placementConstraints": [],
+  "compatibilities": [
+    "EC2",
+    "FARGATE",
+    "MANAGED_INSTANCES"
+  ],
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "1024",
+  "memory": "3072",
+  "registeredAt": "2026-09-28T10:02:44.603Z",
+  "registeredBy": "arn:aws:iam::977098986605:user/bengaluru-team",
+  "enableFaultInjection": false,
+  "tags": []
+}
