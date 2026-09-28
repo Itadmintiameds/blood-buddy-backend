@@ -14,4 +14,5 @@ public class AuthResponse {
     private final String username;
     private final String role;
     private final Long bloodCentreId;
+    private final String bloodCentreName;
 }

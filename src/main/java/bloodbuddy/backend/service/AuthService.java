@@ -102,6 +102,7 @@ public class AuthService {
                 .username(user.getUsername())
                 .role(user.getRole() != null ? user.getRole().getRoleName() : null)
                 .bloodCentreId(user.getBloodCentre() != null ? user.getBloodCentre().getBloodCentreId() : null)
+                .bloodCentreName(user.getBloodCentre() != null ? user.getBloodCentre().getBloodCentreName() : null)
                 .build();
     }
 }
