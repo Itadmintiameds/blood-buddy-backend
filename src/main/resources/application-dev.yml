@@ -5,7 +5,7 @@ jwt:
 
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_URL:localhost}:5432/${DB_NAME:blood_buddy}
+    url: jdbc:postgresql://${DB_URL:localhost}:${DB_PORT:5432}/${DB_NAME:blood_buddy}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
