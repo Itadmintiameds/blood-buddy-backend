@@ -71,12 +71,20 @@ public class AdminBloodRequestService {
         BloodDonorDetails donor = bloodDonorDetailsRepository.findById(bloodDonorDetailsId)
                 .orElseThrow(() -> new ResourceNotFoundException("Donor not found: " + bloodDonorDetailsId));
 
+        LocalDateTime donatedAt = LocalDateTime.now();
+
         BloodRequestDonation donation = new BloodRequestDonation();
         donation.setBloodRequest(request);
         donation.setBloodDonorDetails(donor);
-        donation.setDonatedAt(LocalDateTime.now());
+        donation.setDonatedAt(donatedAt);
         donation.setCreatedBy(actor);
         bloodRequestDonationRepository.save(donation);
+
+        // Recording a donation means the donor just donated, so refresh their last donation date.
+        donor.setLastBloodDonationDate(donatedAt.toLocalDate());
+        donor.setModifiedAt(donatedAt);
+        donor.setModifiedBy(actor);
+        bloodDonorDetailsRepository.save(donor);
 
         return toDetail(request);
     }
