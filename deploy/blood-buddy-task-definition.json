@@ -17,6 +17,10 @@
       "essential": true,
       "environment": [
         {
+          "name": "TZ",
+          "value": "Asia/Kolkata"
+        },
+        {
           "name": "SPRING_PROFILES_ACTIVE",
           "value": "test"
         }
