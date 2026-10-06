@@ -1,6 +1,7 @@
 package bloodbuddy.backend.service;
 
 import bloodbuddy.backend.common.PagedResponse;
+import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.donor.DonorRegistrationRequest;
 import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.entity.BloodDonorDetails;
@@ -62,5 +63,13 @@ public class DonorService {
     public PagedResponse<DonorResponse> list(Pageable pageable) {
         return PagedResponse.fromPage(
                 bloodDonorDetailsRepository.findAll(pageable).map(DonorMapper::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public LocationOptionsResponse getLocationOptions() {
+        return LocationOptionsResponse.builder()
+                .cities(bloodDonorDetailsRepository.findDistinctCities())
+                .districts(bloodDonorDetailsRepository.findDistinctDistricts())
+                .build();
     }
 }

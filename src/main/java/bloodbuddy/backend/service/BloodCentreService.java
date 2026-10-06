@@ -1,7 +1,11 @@
 package bloodbuddy.backend.service;
 
+import bloodbuddy.backend.common.PagedResponse;
 import bloodbuddy.backend.constants.RoleNames;
+import bloodbuddy.backend.dto.centre.BloodCentreFilterRequest;
+import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreRegistrationRequest;
+import bloodbuddy.backend.dto.centre.BloodCentreStatsResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreRegistrationResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreResponse;
 import bloodbuddy.backend.entity.BloodCentres;
@@ -11,9 +15,12 @@ import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
 import bloodbuddy.backend.mapper.BloodCentreMapper;
 import bloodbuddy.backend.repository.BloodCentresRepository;
+import bloodbuddy.backend.repository.InventoryRepository;
 import bloodbuddy.backend.repository.RolesRepository;
+import bloodbuddy.backend.repository.specification.BloodCentreSpecifications;
 import bloodbuddy.backend.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +33,7 @@ import java.util.List;
 public class BloodCentreService {
 
     private final BloodCentresRepository bloodCentresRepository;
+    private final InventoryRepository inventoryRepository;
     private final UsersRepository usersRepository;
     private final RolesRepository rolesRepository;
     private final PasswordEncoder passwordEncoder;
@@ -41,6 +49,33 @@ public class BloodCentreService {
         return bloodCentresRepository.findAll().stream()
                 .map(BloodCentreMapper::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PagedResponse<BloodCentreResponse> list(BloodCentreFilterRequest filter, Pageable pageable) {
+        return PagedResponse.fromPage(
+                bloodCentresRepository.findAll(BloodCentreSpecifications.withFilters(filter), pageable)
+                        .map(BloodCentreMapper::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public LocationOptionsResponse getLocationOptions() {
+        return LocationOptionsResponse.builder()
+                .cities(bloodCentresRepository.findDistinctCities())
+                .districts(bloodCentresRepository.findDistinctDistricts())
+                .build();
+    }
+
+    /** Units at or below this count flag a centre as low-stock (0/out-of-stock included). */
+    private static final long LOW_STOCK_THRESHOLD = 3;
+
+    @Transactional(readOnly = true)
+    public BloodCentreStatsResponse getStats() {
+        return BloodCentreStatsResponse.builder()
+                .totalBloodCentres(bloodCentresRepository.countByIsActiveTrue())
+                .lowStockCentres(bloodCentresRepository.countLowStockActiveCentres(LOW_STOCK_THRESHOLD))
+                .totalBloodUnits(inventoryRepository.sumAvailableUnits())
+                .build();
     }
 
     @Transactional

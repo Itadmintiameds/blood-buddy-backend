@@ -2,6 +2,7 @@ package bloodbuddy.backend.service;
 
 import bloodbuddy.backend.common.PagedResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreResponse;
+import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.dto.request.BloodRequestDetailResponse;
 import bloodbuddy.backend.dto.request.BloodRequestSummaryResponse;
@@ -56,6 +57,14 @@ public class AdminBloodRequestService {
     public PagedResponse<BloodRequestSummaryResponse> list(Pageable pageable) {
         return PagedResponse.fromPage(
                 bloodRequestRepository.findAll(pageable).map(BloodRequestMapper::toSummaryResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public LocationOptionsResponse getLocationOptions() {
+        return LocationOptionsResponse.builder()
+                .cities(bloodRequestRepository.findDistinctCities())
+                .districts(bloodRequestRepository.findDistinctDistricts())
+                .build();
     }
 
     @Transactional(readOnly = true)

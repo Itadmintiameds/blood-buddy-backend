@@ -2,6 +2,7 @@ package bloodbuddy.backend.controller;
 
 import bloodbuddy.backend.common.ApiResponse;
 import bloodbuddy.backend.common.PagedResponse;
+import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.service.DonorService;
 import org.springframework.data.domain.Pageable;
@@ -33,5 +34,11 @@ public class AdminDonorController {
     @GetMapping("/paginated")
     public ResponseEntity<ApiResponse<PagedResponse<DonorResponse>>> listDonorsPaginated(Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Donors fetched", donorService.list(pageable)));
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<ApiResponse<LocationOptionsResponse>> locationOptions() {
+        return ResponseEntity.ok(ApiResponse.success("Location options fetched",
+                donorService.getLocationOptions()));
     }
 }

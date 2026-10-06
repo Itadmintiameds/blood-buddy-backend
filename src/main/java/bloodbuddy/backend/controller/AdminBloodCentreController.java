@@ -1,7 +1,11 @@
 package bloodbuddy.backend.controller;
 
 import bloodbuddy.backend.common.ApiResponse;
+import bloodbuddy.backend.common.PagedResponse;
+import bloodbuddy.backend.dto.centre.BloodCentreFilterRequest;
 import bloodbuddy.backend.dto.centre.BloodCentreResponse;
+import bloodbuddy.backend.dto.centre.BloodCentreStatsResponse;
+import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
 import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
 import bloodbuddy.backend.dto.inventory.StockAdjustmentRequest;
@@ -9,19 +13,17 @@ import bloodbuddy.backend.security.CustomUserDetails;
 import bloodbuddy.backend.service.BloodCentreService;
 import bloodbuddy.backend.service.InventoryService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Superadmin views over all centres and any centre's stock (secured by /admin/** -> SUPERADMIN). */
+/**
+ * Superadmin views over all centres and any centre's stock (secured by /admin/** -> SUPERADMIN).
+ */
 @RestController
 @RequestMapping("/admin/blood-centres")
 @PreAuthorize("hasRole('SUPERADMIN')")
@@ -39,6 +41,24 @@ public class AdminBloodCentreController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<BloodCentreResponse>>> listCentres() {
         return ResponseEntity.ok(ApiResponse.success("Blood centres fetched", bloodCentreService.listAll()));
+    }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<ApiResponse<PagedResponse<BloodCentreResponse>>> listCentresPaginated(
+            @ModelAttribute BloodCentreFilterRequest filter, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success("Blood centres fetched",
+                bloodCentreService.list(filter, pageable)));
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<ApiResponse<LocationOptionsResponse>> locationOptions() {
+        return ResponseEntity.ok(ApiResponse.success("Location options fetched",
+                bloodCentreService.getLocationOptions()));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<BloodCentreStatsResponse>> stats() {
+        return ResponseEntity.ok(ApiResponse.success("Stats fetched", bloodCentreService.getStats()));
     }
 
     @GetMapping("/{bloodCentreId}/inventory")

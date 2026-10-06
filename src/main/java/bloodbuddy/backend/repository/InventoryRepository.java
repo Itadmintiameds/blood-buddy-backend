@@ -31,4 +31,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
                                       @Param("pincode") String pincode,
                                       @Param("city") String city,
                                       @Param("district") String district);
+
+    // Total units on hand across all centres; COALESCE so an empty table yields 0, not null.
+    @Query("SELECT COALESCE(SUM(i.availableUnits), 0) FROM Inventory i")
+    long sumAvailableUnits();
 }

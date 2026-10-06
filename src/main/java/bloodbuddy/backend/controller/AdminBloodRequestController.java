@@ -2,6 +2,7 @@ package bloodbuddy.backend.controller;
 
 import bloodbuddy.backend.common.ApiResponse;
 import bloodbuddy.backend.common.PagedResponse;
+import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.request.BloodRequestDetailResponse;
 import bloodbuddy.backend.dto.request.BloodRequestSummaryResponse;
 import bloodbuddy.backend.dto.request.CloseRequestRequest;
@@ -45,6 +46,12 @@ public class AdminBloodRequestController {
     public ResponseEntity<ApiResponse<PagedResponse<BloodRequestSummaryResponse>>> listRequestsPaginated(Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Blood requests fetched",
                 adminBloodRequestService.list(pageable)));
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<ApiResponse<LocationOptionsResponse>> locationOptions() {
+        return ResponseEntity.ok(ApiResponse.success("Location options fetched",
+                adminBloodRequestService.getLocationOptions()));
     }
 
     @GetMapping("/{bloodRequestId}")

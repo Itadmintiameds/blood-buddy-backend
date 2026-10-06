@@ -30,4 +30,10 @@ public interface BloodDonorDetailsRepository extends JpaRepository<BloodDonorDet
                                                 @Param("pincode") String pincode,
                                                 @Param("city") String city,
                                                 @Param("district") String district);
+
+    @Query("SELECT DISTINCT d.city FROM BloodDonorDetails d WHERE d.city IS NOT NULL AND d.city <> '' ORDER BY d.city")
+    List<String> findDistinctCities();
+
+    @Query("SELECT DISTINCT d.district FROM BloodDonorDetails d WHERE d.district IS NOT NULL AND d.district <> '' ORDER BY d.district")
+    List<String> findDistinctDistricts();
 }
