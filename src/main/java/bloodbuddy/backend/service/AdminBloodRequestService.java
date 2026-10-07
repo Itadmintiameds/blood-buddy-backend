@@ -5,6 +5,8 @@ import bloodbuddy.backend.dto.centre.BloodCentreResponse;
 import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.dto.request.BloodRequestDetailResponse;
+import bloodbuddy.backend.dto.request.BloodRequestFilterRequest;
+import bloodbuddy.backend.dto.request.BloodRequestStatsResponse;
 import bloodbuddy.backend.dto.request.BloodRequestSummaryResponse;
 import bloodbuddy.backend.entity.BloodDonorDetails;
 import bloodbuddy.backend.entity.BloodRequest;
@@ -20,6 +22,7 @@ import bloodbuddy.backend.repository.BloodDonorDetailsRepository;
 import bloodbuddy.backend.repository.BloodRequestCentreRepository;
 import bloodbuddy.backend.repository.BloodRequestDonationRepository;
 import bloodbuddy.backend.repository.BloodRequestRepository;
+import bloodbuddy.backend.repository.specification.BloodRequestSpecifications;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,9 +57,10 @@ public class AdminBloodRequestService {
     }
 
     @Transactional(readOnly = true)
-    public PagedResponse<BloodRequestSummaryResponse> list(Pageable pageable) {
+    public PagedResponse<BloodRequestSummaryResponse> list(BloodRequestFilterRequest filter, Pageable pageable) {
         return PagedResponse.fromPage(
-                bloodRequestRepository.findAll(pageable).map(BloodRequestMapper::toSummaryResponse));
+                bloodRequestRepository.findAll(BloodRequestSpecifications.withFilters(filter), pageable)
+                        .map(BloodRequestMapper::toSummaryResponse));
     }
 
     @Transactional(readOnly = true)
@@ -64,6 +68,19 @@ public class AdminBloodRequestService {
         return LocationOptionsResponse.builder()
                 .cities(bloodRequestRepository.findDistinctCities())
                 .districts(bloodRequestRepository.findDistinctDistricts())
+                .build();
+    }
+
+    /** Statuses treated as "open" (still being worked) on the dashboard. */
+    private static final List<BloodRequestStatus> OPEN_STATUSES =
+            List.of(BloodRequestStatus.CENTRES_FOUND, BloodRequestStatus.NO_CENTRES_FOUND);
+
+    @Transactional(readOnly = true)
+    public BloodRequestStatsResponse getStats() {
+        return BloodRequestStatsResponse.builder()
+                .totalRequests(bloodRequestRepository.count())
+                .openRequests(bloodRequestRepository.countByStatusIn(OPEN_STATUSES))
+                .closedRequests(bloodRequestRepository.countByStatus(BloodRequestStatus.CLOSED))
                 .build();
     }
 

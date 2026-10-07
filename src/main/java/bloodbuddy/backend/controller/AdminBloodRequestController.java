@@ -4,6 +4,8 @@ import bloodbuddy.backend.common.ApiResponse;
 import bloodbuddy.backend.common.PagedResponse;
 import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.request.BloodRequestDetailResponse;
+import bloodbuddy.backend.dto.request.BloodRequestFilterRequest;
+import bloodbuddy.backend.dto.request.BloodRequestStatsResponse;
 import bloodbuddy.backend.dto.request.BloodRequestSummaryResponse;
 import bloodbuddy.backend.dto.request.CloseRequestRequest;
 import bloodbuddy.backend.dto.request.RecordDonationRequest;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,15 +46,21 @@ public class AdminBloodRequestController {
     }
 
     @GetMapping("/paginated")
-    public ResponseEntity<ApiResponse<PagedResponse<BloodRequestSummaryResponse>>> listRequestsPaginated(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<BloodRequestSummaryResponse>>> listRequestsPaginated(
+            @ModelAttribute BloodRequestFilterRequest filter, Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Blood requests fetched",
-                adminBloodRequestService.list(pageable)));
+                adminBloodRequestService.list(filter, pageable)));
     }
 
     @GetMapping("/locations")
     public ResponseEntity<ApiResponse<LocationOptionsResponse>> locationOptions() {
         return ResponseEntity.ok(ApiResponse.success("Location options fetched",
                 adminBloodRequestService.getLocationOptions()));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<BloodRequestStatsResponse>> stats() {
+        return ResponseEntity.ok(ApiResponse.success("Stats fetched", adminBloodRequestService.getStats()));
     }
 
     @GetMapping("/{bloodRequestId}")
