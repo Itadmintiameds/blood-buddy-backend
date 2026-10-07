@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +20,12 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "blood_centres")
+@Table(name = "blood_centres", indexes = {
+        @Index(name = "idx_centre_email", columnList = "email"),
+        @Index(name = "idx_centre_city", columnList = "city"),
+        @Index(name = "idx_centre_district", columnList = "district"),
+        @Index(name = "idx_centre_pincode", columnList = "pincode")
+})
 public class BloodCentres {
 
     @Id

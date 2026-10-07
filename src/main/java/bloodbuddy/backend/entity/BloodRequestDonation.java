@@ -7,6 +7,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -23,7 +24,10 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "blood_request_donation")
+@Table(name = "blood_request_donation", indexes = {
+        @Index(name = "idx_brd_request", columnList = "blood_request_id"),
+        @Index(name = "idx_brd_donor", columnList = "blood_donor_details_id")
+})
 public class BloodRequestDonation {
 
     @Id

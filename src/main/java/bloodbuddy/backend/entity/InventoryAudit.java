@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -29,7 +30,10 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "inventory_audit")
+// Composite index serves the ledger query: filter by inventory_id + ORDER BY created_at DESC (paginated).
+@Table(name = "inventory_audit", indexes = {
+        @Index(name = "idx_audit_inventory_created", columnList = "inventory_id, created_at")
+})
 public class InventoryAudit {
 
     @Id
