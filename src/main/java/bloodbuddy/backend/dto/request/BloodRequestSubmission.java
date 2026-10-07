@@ -6,8 +6,6 @@ import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
 @Getter
 @Setter
 public class BloodRequestSubmission {
@@ -28,7 +26,8 @@ public class BloodRequestSubmission {
     @Positive(message = "requiredUnits must be greater than zero")
     private Long requiredUnits;
 
-    private LocalDate dob;
+    // private LocalDate dob;
+    private Integer age;
 
     private String hospitalName;
 

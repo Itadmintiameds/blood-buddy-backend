@@ -46,7 +46,8 @@ public class BloodRequestService {
         request.setBloodComponent(bloodComponent);
         request.setBloodGroup(bloodGroup);
         request.setRequiredUnits(submission.getRequiredUnits());
-        request.setDob(submission.getDob());
+        // request.setDob(submission.getDob());
+        request.setAge(submission.getAge());
         request.setHospitalName(submission.getHospitalName());
         request.setAddress(submission.getAddress());
         request.setCity(submission.getCity());

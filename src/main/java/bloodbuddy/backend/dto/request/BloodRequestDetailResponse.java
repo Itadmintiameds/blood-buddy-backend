@@ -6,7 +6,6 @@ import bloodbuddy.backend.entity.BloodRequestStatus;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,7 +23,8 @@ public class BloodRequestDetailResponse {
     private final Long bloodComponentId;
     private final String bloodComponentName;
     private final Long requiredUnits;
-    private final LocalDate dob;
+    // private final LocalDate dob;
+    private final Integer age;
     private final String hospitalName;
     private final String address;
     private final String city;

@@ -20,7 +20,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -59,8 +58,11 @@ public class BloodRequest {
     @Column(name = "required_units")
     private Long requiredUnits;
 
-    @Column(name = "dob")
-    private LocalDate dob;
+    // @Column(name = "dob")
+    // private LocalDate dob;
+
+    @Column(name = "age")
+    private Integer age;
 
     @Column(name = "hospital_name")
     private String hospitalName;
