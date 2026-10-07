@@ -2,19 +2,23 @@ package bloodbuddy.backend.service;
 
 import bloodbuddy.backend.common.PagedResponse;
 import bloodbuddy.backend.dto.common.LocationOptionsResponse;
+import bloodbuddy.backend.dto.donor.DonorFilterRequest;
 import bloodbuddy.backend.dto.donor.DonorRegistrationRequest;
 import bloodbuddy.backend.dto.donor.DonorResponse;
+import bloodbuddy.backend.dto.donor.DonorStatsResponse;
 import bloodbuddy.backend.entity.BloodDonorDetails;
 import bloodbuddy.backend.entity.masters.BloodGroup;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
 import bloodbuddy.backend.mapper.DonorMapper;
 import bloodbuddy.backend.repository.BloodDonorDetailsRepository;
 import bloodbuddy.backend.repository.BloodGroupRepository;
+import bloodbuddy.backend.repository.specification.DonorSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -60,9 +64,10 @@ public class DonorService {
     }
 
     @Transactional(readOnly = true)
-    public PagedResponse<DonorResponse> list(Pageable pageable) {
+    public PagedResponse<DonorResponse> list(DonorFilterRequest filter, Pageable pageable) {
         return PagedResponse.fromPage(
-                bloodDonorDetailsRepository.findAll(pageable).map(DonorMapper::toResponse));
+                bloodDonorDetailsRepository.findAll(DonorSpecifications.withFilters(filter), pageable)
+                        .map(DonorMapper::toResponse));
     }
 
     @Transactional(readOnly = true)
@@ -70,6 +75,20 @@ public class DonorService {
         return LocationOptionsResponse.builder()
                 .cities(bloodDonorDetailsRepository.findDistinctCities())
                 .districts(bloodDonorDetailsRepository.findDistinctDistricts())
+                .build();
+    }
+
+    /** Trailing window (days) counted as a "recent" donation for the dashboard. */
+    private static final int RECENT_DONATION_WINDOW_DAYS = 30;
+
+    @Transactional(readOnly = true)
+    public DonorStatsResponse getStats() {
+        LocalDate since = LocalDate.now().minusDays(RECENT_DONATION_WINDOW_DAYS);
+        return DonorStatsResponse.builder()
+                .totalDonors(bloodDonorDetailsRepository.count())
+                .distinctBloodGroupCount(bloodDonorDetailsRepository.countDistinctBloodGroups())
+                .recentDonationCount(
+                        bloodDonorDetailsRepository.countByLastBloodDonationDateGreaterThanEqual(since))
                 .build();
     }
 }
