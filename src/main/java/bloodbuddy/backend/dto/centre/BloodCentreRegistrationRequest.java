@@ -14,7 +14,7 @@ public class BloodCentreRegistrationRequest {
     @NotBlank(message = "bloodCentreName is required")
     private String bloodCentreName;
 
-    private String bloodBankCategory;
+    // private String bloodBankCategory;
 
     private String bloodCentreLicenceNumber;
 

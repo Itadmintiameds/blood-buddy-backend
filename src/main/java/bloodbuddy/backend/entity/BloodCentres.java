@@ -36,8 +36,8 @@ public class BloodCentres {
     @Column(name = "blood_centre_name")
     private String bloodCentreName;
 
-    @Column(name = "blood_bank_category")
-    private String bloodBankCategory;
+    // @Column(name = "blood_bank_category")
+    // private String bloodBankCategory;
 
     @Column(name = "blood_centre_licence_number")
     private String bloodCentreLicenceNumber;

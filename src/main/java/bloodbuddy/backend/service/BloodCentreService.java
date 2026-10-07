@@ -101,7 +101,7 @@ public class BloodCentreService {
 
         BloodCentres centre = new BloodCentres();
         centre.setBloodCentreName(request.getBloodCentreName());
-        centre.setBloodBankCategory(request.getBloodBankCategory());
+        // centre.setBloodBankCategory(request.getBloodBankCategory());
         centre.setBloodCentreLicenceNumber(request.getBloodCentreLicenceNumber());
         centre.setLicenceExpiryDate(request.getLicenceExpiryDate());
         centre.setMobileNumber(request.getMobileNumber());

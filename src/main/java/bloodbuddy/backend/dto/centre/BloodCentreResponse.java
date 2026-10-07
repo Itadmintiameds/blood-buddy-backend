@@ -9,7 +9,7 @@ public class BloodCentreResponse {
 
     private final Long bloodCentreId;
     private final String bloodCentreName;
-    private final String bloodBankCategory;
+    // private final String bloodBankCategory;
     private final String mobileNumber;
     private final String email;
     private final String address;

@@ -13,7 +13,7 @@ public final class BloodCentreMapper {
         return BloodCentreResponse.builder()
                 .bloodCentreId(centre.getBloodCentreId())
                 .bloodCentreName(centre.getBloodCentreName())
-                .bloodBankCategory(centre.getBloodBankCategory())
+                // .bloodBankCategory(centre.getBloodBankCategory())
                 .mobileNumber(centre.getMobileNumber())
                 .email(centre.getEmail())
                 .address(centre.getAddress())
