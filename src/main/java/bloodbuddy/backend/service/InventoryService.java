@@ -1,5 +1,6 @@
 package bloodbuddy.backend.service;
 
+import bloodbuddy.backend.common.PagedResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
 import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
 import bloodbuddy.backend.dto.inventory.InventoryAuditResponse;
@@ -20,6 +21,8 @@ import bloodbuddy.backend.repository.BloodComponentsRepository;
 import bloodbuddy.backend.repository.BloodGroupRepository;
 import bloodbuddy.backend.repository.InventoryAuditRepository;
 import bloodbuddy.backend.repository.InventoryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -139,15 +142,14 @@ public class InventoryService {
      * the caller's centre, otherwise it is treated as not found.
      */
     @Transactional(readOnly = true)
-    public List<InventoryAuditResponse> getInventoryHistory(Long bloodCentreId, Long inventoryId) {
-        List<InventoryAudit> history = inventoryAuditRepository.findInventoryHistory(bloodCentreId, inventoryId);
+    public PagedResponse<InventoryAuditResponse> getInventoryHistory(Long bloodCentreId, Long inventoryId,
+                                                                     Pageable pageable) {
+        Page<InventoryAudit> history = inventoryAuditRepository.findInventoryHistory(bloodCentreId, inventoryId, pageable);
         if (history.isEmpty()
                 && !inventoryRepository.existsByInventoryIdAndBloodCentre_BloodCentreId(inventoryId, bloodCentreId)) {
             throw new ResourceNotFoundException("No inventory row found for id " + inventoryId + " at this centre");
         }
-        return history.stream()
-                .map(InventoryMapper::toAuditResponse)
-                .toList();
+        return PagedResponse.fromPage(history.map(InventoryMapper::toAuditResponse));
     }
 
     private void writeAudit(Inventory inventory, StockMovement movement, long delta,
