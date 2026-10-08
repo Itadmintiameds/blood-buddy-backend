@@ -86,8 +86,9 @@ public class AdminBloodRequestController {
             @RequestBody(required = false) CloseRequestRequest request,
             @AuthenticationPrincipal CustomUserDetails principal) {
         String remarks = request != null ? request.getRemarks() : null;
+        Long closedUnits = request != null ? request.getClosedUnits() : null;
         BloodRequestDetailResponse response = adminBloodRequestService.close(
-                bloodRequestId, remarks, principal.getUsername());
+                bloodRequestId, remarks, closedUnits, principal.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Request closed", response));
     }
 }

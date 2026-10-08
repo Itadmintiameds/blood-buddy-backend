@@ -17,6 +17,7 @@ public class BloodRequestSummaryResponse {
     private final String bloodGroupName;
     private final String bloodComponentName;
     private final Long requiredUnits;
+    private final Long closedUnits;
     private final String city;
     private final String district;
     private final String pincode;

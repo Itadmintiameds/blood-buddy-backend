@@ -117,7 +117,7 @@ public class AdminBloodRequestService {
 
     /** Admin closes the request after following up with the recipient. */
     @Transactional
-    public BloodRequestDetailResponse close(Long bloodRequestId, String remarks, String actor) {
+    public BloodRequestDetailResponse close(Long bloodRequestId, String remarks, Long closedUnits, String actor) {
         BloodRequest request = requireRequest(bloodRequestId);
         if (request.getStatus() == BloodRequestStatus.CLOSED) {
             throw new BadRequestException("Request is already closed");
@@ -125,6 +125,17 @@ public class AdminBloodRequestService {
         request.setStatus(BloodRequestStatus.CLOSED);
         if (remarks != null) {
             request.setRemarks(remarks);
+        }
+        if (closedUnits != null) {
+            if (closedUnits < 0) {
+                throw new BadRequestException("Closed units cannot be negative");
+            }
+            if (request.getRequiredUnits() != null && closedUnits > request.getRequiredUnits()) {
+                throw new BadRequestException(
+                        "Closed units (" + closedUnits + ") cannot exceed required units ("
+                                + request.getRequiredUnits() + ")");
+            }
+            request.setClosedUnits(closedUnits);
         }
         request.setModifiedAt(LocalDateTime.now());
         request.setModifiedBy(actor);

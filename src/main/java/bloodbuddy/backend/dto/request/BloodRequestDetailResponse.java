@@ -23,6 +23,7 @@ public class BloodRequestDetailResponse {
     private final Long bloodComponentId;
     private final String bloodComponentName;
     private final Long requiredUnits;
+    private final Long closedUnits;
     // private final LocalDate dob;
     private final Integer age;
     private final String hospitalName;

@@ -58,6 +58,10 @@ public class BloodRequest {
     @Column(name = "required_units")
     private Long requiredUnits;
 
+    /** Approximate number of units actually fulfilled when the request was closed. */
+    @Column(name = "closed_units")
+    private Long closedUnits;
+
     // @Column(name = "dob")
     // private LocalDate dob;
 
