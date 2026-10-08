@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
 @Table(name = "blood_request", indexes = {
         @Index(name = "idx_request_blood_group", columnList = "blood_group_id"),
         @Index(name = "idx_request_blood_component", columnList = "blood_component_id"),
-        @Index(name = "idx_request_status", columnList = "status")
+        @Index(name = "idx_request_status_closed_units", columnList = "status, closed_units")
 })
 public class BloodRequest {
 

@@ -81,6 +81,7 @@ public class AdminBloodRequestService {
                 .totalRequests(bloodRequestRepository.count())
                 .openRequests(bloodRequestRepository.countByStatusIn(OPEN_STATUSES))
                 .closedRequests(bloodRequestRepository.countByStatus(BloodRequestStatus.CLOSED))
+                .closedUnits(bloodRequestRepository.sumClosedUnitsByStatus(BloodRequestStatus.CLOSED))
                 .build();
     }
 

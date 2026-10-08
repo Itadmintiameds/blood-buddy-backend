@@ -16,4 +16,7 @@ public class BloodRequestStatsResponse {
 
     /** Requests the admin has closed. */
     private final long closedRequests;
+
+    /** Total units fulfilled across all closed requests. */
+    private final long closedUnits;
 }
