@@ -1,11 +1,13 @@
 package bloodbuddy.backend.repository;
 
 import bloodbuddy.backend.entity.BloodDonorDetails;
+import bloodbuddy.backend.entity.DonorStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,15 +26,20 @@ public interface BloodDonorDetailsRepository extends JpaRepository<BloodDonorDet
     @EntityGraph(attributePaths = "bloodGroup")
     Page<BloodDonorDetails> findAll(Pageable pageable);
 
-    // Candidate donors for admin outreach: same blood group and located in the
-    // recipient's pincode, city, or district.
+    // Candidate donors for admin outreach: same blood group, located in the recipient's
+    // pincode/city/district, and currently available. Available means not deactivated and
+    // not inside an active lock window (a lock whose end date has passed counts as available).
     @Query("SELECT d FROM BloodDonorDetails d "
             + "WHERE d.bloodGroup.bloodGroupId = :bloodGroupId "
-            + "AND (d.pincode = :pincode OR d.city = :city OR d.district = :district)")
+            + "AND (d.pincode = :pincode OR d.city = :city OR d.district = :district) "
+            + "AND (d.status IS NULL OR d.status = bloodbuddy.backend.entity.DonorStatus.ACTIVE "
+            + "     OR (d.status = bloodbuddy.backend.entity.DonorStatus.LOCKED "
+            + "         AND d.lockedUntil IS NOT NULL AND d.lockedUntil < :today))")
     List<BloodDonorDetails> findCandidateDonors(@Param("bloodGroupId") Long bloodGroupId,
                                                 @Param("pincode") String pincode,
                                                 @Param("city") String city,
-                                                @Param("district") String district);
+                                                @Param("district") String district,
+                                                @Param("today") LocalDate today);
 
     @Query("SELECT DISTINCT d.city FROM BloodDonorDetails d WHERE d.city IS NOT NULL AND d.city <> '' ORDER BY d.city")
     List<String> findDistinctCities();
@@ -45,4 +52,16 @@ public interface BloodDonorDetailsRepository extends JpaRepository<BloodDonorDet
 
     // Donors who last donated on or after the cut-off date (trailing window for the dashboard).
     long countByLastBloodDonationDateGreaterThanEqual(LocalDate sinceDate);
+
+    long countByStatus(DonorStatus status);
+
+    // Donors inside an active lock window as of the given date (expired locks are excluded).
+    long countByStatusAndLockedUntilGreaterThanEqual(DonorStatus status, LocalDate asOf);
+
+    // One-time backfill: donors created before the availability feature have a null status.
+    // Marking them ACTIVE keeps the data consistent. Idempotent (updates nothing once done).
+    @Modifying
+    @Query("UPDATE BloodDonorDetails d SET d.status = bloodbuddy.backend.entity.DonorStatus.ACTIVE "
+            + "WHERE d.status IS NULL")
+    int markNullStatusActive();
 }

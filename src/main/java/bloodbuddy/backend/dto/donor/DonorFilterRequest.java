@@ -1,5 +1,6 @@
 package bloodbuddy.backend.dto.donor;
 
+import bloodbuddy.backend.entity.DonorStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,4 +25,10 @@ public class DonorFilterRequest {
 
     /** Free-text search across name, mobile, alternative mobile, address, city, district and pincode. */
     private String search;
+
+    /**
+     * Match donors with any of these availability statuses. When empty, only currently
+     * available donors are returned (deactivated and actively-locked donors are hidden).
+     */
+    private List<DonorStatus> statuses;
 }

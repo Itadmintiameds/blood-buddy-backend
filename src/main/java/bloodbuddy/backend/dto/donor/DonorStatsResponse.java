@@ -16,4 +16,10 @@ public class DonorStatsResponse {
 
     /** Donors whose last donation falls within the trailing 30 days. */
     private final long recentDonationCount;
+
+    /** Donors currently inside an active lock window (temporarily unavailable). */
+    private final long lockedDonors;
+
+    /** Donors permanently deactivated (medical / deceased / relocated). */
+    private final long deactivatedDonors;
 }

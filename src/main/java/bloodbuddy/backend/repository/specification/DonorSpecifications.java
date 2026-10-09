@@ -2,12 +2,14 @@ package bloodbuddy.backend.repository.specification;
 
 import bloodbuddy.backend.dto.donor.DonorFilterRequest;
 import bloodbuddy.backend.entity.BloodDonorDetails;
+import bloodbuddy.backend.entity.DonorStatus;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +33,28 @@ public final class DonorSpecifications {
             }
 
             List<Predicate> predicates = new ArrayList<>();
+
+            // Status: when the admin asks for specific statuses, match exactly those (lets them
+            // pull up LOCKED / DEACTIVATED donors to manage). Otherwise default to only currently
+            // available donors: not deactivated and not inside an active lock window.
+            if (!CollectionUtils.isEmpty(filter.getStatuses())) {
+                Predicate statusMatch = root.get("status").in(filter.getStatuses());
+                // Old donors created before this feature have a null status; treat them as ACTIVE
+                // so they still appear when the admin filters for ACTIVE.
+                if (filter.getStatuses().contains(DonorStatus.ACTIVE)) {
+                    statusMatch = cb.or(statusMatch, cb.isNull(root.get("status")));
+                }
+                predicates.add(statusMatch);
+            } else {
+                Predicate active = cb.or(
+                        cb.isNull(root.get("status")),
+                        cb.equal(root.get("status"), DonorStatus.ACTIVE));
+                Predicate lockExpired = cb.and(
+                        cb.equal(root.get("status"), DonorStatus.LOCKED),
+                        cb.isNotNull(root.get("lockedUntil")),
+                        cb.lessThan(root.get("lockedUntil"), LocalDate.now()));
+                predicates.add(cb.or(active, lockExpired));
+            }
 
             if (!CollectionUtils.isEmpty(filter.getBloodGroupIds())) {
                 predicates.add(root.get("bloodGroup").get("bloodGroupId").in(filter.getBloodGroupIds()));

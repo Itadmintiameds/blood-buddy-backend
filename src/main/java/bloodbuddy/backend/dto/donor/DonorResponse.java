@@ -1,5 +1,7 @@
 package bloodbuddy.backend.dto.donor;
 
+import bloodbuddy.backend.entity.DonorStatus;
+import bloodbuddy.backend.entity.DonorUnavailabilityReason;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -23,4 +25,13 @@ public class DonorResponse {
     private final String pincode;
     private final LocalDate lastBloodDonationDate;
     private final LocalDateTime createdAt;
+
+    // Availability lifecycle.
+    private final DonorStatus status;
+    private final DonorUnavailabilityReason unavailabilityReason;
+    private final String remarks;
+    private final LocalDate lockedFrom;
+    private final LocalDate lockedUntil;
+    /** Convenience flag: true when the donor is currently available for outreach. */
+    private final boolean available;
 }

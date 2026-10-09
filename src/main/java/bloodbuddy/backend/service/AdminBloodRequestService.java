@@ -27,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -162,7 +163,8 @@ public class AdminBloodRequestService {
                         request.getBloodGroup().getBloodGroupId(),
                         request.getPincode(),
                         request.getCity(),
-                        request.getDistrict()).stream()
+                        request.getDistrict(),
+                        LocalDate.now()).stream()
                         .map(DonorMapper::toResponse)
                         .toList()
                 : List.of();
