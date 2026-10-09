@@ -8,6 +8,7 @@ import bloodbuddy.backend.dto.centre.BloodCentreStatsResponse;
 import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
 import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
+import bloodbuddy.backend.dto.inventory.InventoryAuditResponse;
 import bloodbuddy.backend.dto.inventory.StockAdjustmentRequest;
 import bloodbuddy.backend.security.CustomUserDetails;
 import bloodbuddy.backend.service.BloodCentreService;
@@ -66,6 +67,16 @@ public class AdminBloodCentreController {
             @PathVariable Long bloodCentreId) {
         return ResponseEntity.ok(ApiResponse.success("Inventory fetched",
                 inventoryService.getCentreInventory(bloodCentreId)));
+    }
+
+    /** Stock movement ledger for any centre's inventory row (newest first), paginated. */
+    @GetMapping("/{bloodCentreId}/inventory/{inventoryId}/history")
+    public ResponseEntity<ApiResponse<PagedResponse<InventoryAuditResponse>>> inventoryHistory(
+            @PathVariable Long bloodCentreId,
+            @PathVariable Long inventoryId,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success("Stock history fetched",
+                inventoryService.getInventoryHistory(bloodCentreId, inventoryId, pageable)));
     }
 
     // Superadmin updates any centre's stock; the target centre comes from the path.
