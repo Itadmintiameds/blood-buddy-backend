@@ -30,20 +30,24 @@ public interface BloodDonorDetailsRepository extends JpaRepository<BloodDonorDet
     // pincode/city/district, currently available, and eligible to donate. Available means not
     // deactivated and not inside an active lock window (a lock whose end date has passed counts
     // as available). Eligible means they have never donated or last donated on or before the
-    // eligibility cut-off (today minus the minimum gap between donations).
+    // eligibility cut-off (today minus the minimum gap between donations). Ordered so the donors
+    // who have gone longest without donating (never-donated first) come first, and the caller
+    // caps the result with a Pageable limit.
     @Query("SELECT d FROM BloodDonorDetails d "
             + "WHERE d.bloodGroup.bloodGroupId = :bloodGroupId "
             + "AND (d.pincode = :pincode OR d.city = :city OR d.district = :district) "
             + "AND (d.status IS NULL OR d.status = bloodbuddy.backend.entity.DonorStatus.ACTIVE "
             + "     OR (d.status = bloodbuddy.backend.entity.DonorStatus.LOCKED "
             + "         AND d.lockedUntil IS NOT NULL AND d.lockedUntil < :today)) "
-            + "AND (d.lastBloodDonationDate IS NULL OR d.lastBloodDonationDate <= :eligibleOnOrBefore)")
+            + "AND (d.lastBloodDonationDate IS NULL OR d.lastBloodDonationDate <= :eligibleOnOrBefore) "
+            + "ORDER BY d.lastBloodDonationDate ASC NULLS FIRST")
     List<BloodDonorDetails> findCandidateDonors(@Param("bloodGroupId") Long bloodGroupId,
                                                 @Param("pincode") String pincode,
                                                 @Param("city") String city,
                                                 @Param("district") String district,
                                                 @Param("today") LocalDate today,
-                                                @Param("eligibleOnOrBefore") LocalDate eligibleOnOrBefore);
+                                                @Param("eligibleOnOrBefore") LocalDate eligibleOnOrBefore,
+                                                Pageable pageable);
 
     @Query("SELECT DISTINCT d.city FROM BloodDonorDetails d WHERE d.city IS NOT NULL AND d.city <> '' ORDER BY d.city")
     List<String> findDistinctCities();

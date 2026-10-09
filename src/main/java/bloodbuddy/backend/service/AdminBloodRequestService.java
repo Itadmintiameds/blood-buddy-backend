@@ -13,6 +13,7 @@ import bloodbuddy.backend.entity.BloodRequest;
 import bloodbuddy.backend.entity.BloodRequestCentre;
 import bloodbuddy.backend.entity.BloodRequestDonation;
 import bloodbuddy.backend.entity.BloodRequestStatus;
+import bloodbuddy.backend.entity.masters.BloodComponents;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
 import bloodbuddy.backend.mapper.BloodCentreMapper;
@@ -23,6 +24,7 @@ import bloodbuddy.backend.repository.BloodRequestCentreRepository;
 import bloodbuddy.backend.repository.BloodRequestDonationRepository;
 import bloodbuddy.backend.repository.BloodRequestRepository;
 import bloodbuddy.backend.repository.specification.BloodRequestSpecifications;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,6 +103,12 @@ public class AdminBloodRequestService {
      * ~3 months before donating again; this also drives which donors are offered as candidates.
      */
     private static final int DONATION_ELIGIBILITY_GAP_DAYS = 90;
+
+    // Donor candidates are only relevant for components fulfilled by individual donors. The cap is
+    // the maximum units a single request of that component can draw from donors (one donor ~ one
+    // unit): 6 for PRBC, 3 for Whole Blood. Other components are not fulfilled from the donor list.
+    private static final int PRBC_MAX_DONORS = 6;
+    private static final int WHOLE_BLOOD_MAX_DONORS = 3;
 
     /** Log a donor who agreed to and donated for this request. */
     @Transactional
@@ -192,21 +200,61 @@ public class AdminBloodRequestService {
                 .map(DonorMapper::toResponse)
                 .toList();
 
-        // Only surface donor candidates when no centre matched; otherwise the centres are the answer.
+        List<DonorResponse> donorCandidates = resolveDonorCandidates(request);
+
+        return BloodRequestMapper.toDetailResponse(request, matchedCentres, donatedBy, donorCandidates);
+    }
+
+    /**
+     * Donor candidates to offer for a request. Only surfaced when no centre had stock, only for
+     * donor-fulfilled components (PRBC / Whole Blood), and capped at the request's required units
+     * bounded by the component's maximum (6 PRBC / 3 Whole Blood). Empty for every other case.
+     */
+    private List<DonorResponse> resolveDonorCandidates(BloodRequest request) {
+        if (request.getStatus() != BloodRequestStatus.NO_CENTRES_FOUND) {
+            return List.of();
+        }
+
+        int componentMax = maxDonorsForComponent(request.getBloodComponent());
+        if (componentMax == 0) {
+            return List.of();
+        }
+
+        int limit = componentMax;
+        Long required = request.getRequiredUnits();
+        if (required != null && required < componentMax) {
+            limit = required.intValue();
+        }
+        if (limit <= 0) {
+            return List.of();
+        }
+
         LocalDate today = LocalDate.now();
-        List<DonorResponse> donorCandidates = request.getStatus() == BloodRequestStatus.NO_CENTRES_FOUND
-                ? bloodDonorDetailsRepository.findCandidateDonors(
+        return bloodDonorDetailsRepository.findCandidateDonors(
                         request.getBloodGroup().getBloodGroupId(),
                         request.getPincode(),
                         request.getCity(),
                         request.getDistrict(),
                         today,
-                        today.minusDays(DONATION_ELIGIBILITY_GAP_DAYS)).stream()
-                        .map(DonorMapper::toResponse)
-                        .toList()
-                : List.of();
+                        today.minusDays(DONATION_ELIGIBILITY_GAP_DAYS),
+                        PageRequest.of(0, limit)).stream()
+                .map(DonorMapper::toResponse)
+                .toList();
+    }
 
-        return BloodRequestMapper.toDetailResponse(request, matchedCentres, donatedBy, donorCandidates);
+    /** Max donors to offer for a component: 6 for PRBC, 3 for Whole Blood, 0 (none) otherwise. */
+    private int maxDonorsForComponent(BloodComponents component) {
+        if (component == null || component.getBloodComponentName() == null) {
+            return 0;
+        }
+        String name = component.getBloodComponentName().toLowerCase();
+        if (name.contains("prbc") || name.contains("packed red")) {
+            return PRBC_MAX_DONORS;
+        }
+        if (name.contains("whole blood")) {
+            return WHOLE_BLOOD_MAX_DONORS;
+        }
+        return 0;
     }
 
     private BloodRequest requireRequest(Long bloodRequestId) {
