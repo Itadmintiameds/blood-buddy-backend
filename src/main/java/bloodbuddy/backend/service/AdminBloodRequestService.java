@@ -76,13 +76,17 @@ public class AdminBloodRequestService {
     private static final List<BloodRequestStatus> OPEN_STATUSES =
             List.of(BloodRequestStatus.CENTRES_FOUND, BloodRequestStatus.NO_CENTRES_FOUND);
 
+    /** Statuses treated as "closed" (fully or partially fulfilled) on the dashboard. */
+    private static final List<BloodRequestStatus> CLOSED_STATUSES =
+            List.of(BloodRequestStatus.CLOSED, BloodRequestStatus.PARTIALLY_CLOSED);
+
     @Transactional(readOnly = true)
     public BloodRequestStatsResponse getStats() {
         return BloodRequestStatsResponse.builder()
                 .totalRequests(bloodRequestRepository.count())
                 .openRequests(bloodRequestRepository.countByStatusIn(OPEN_STATUSES))
-                .closedRequests(bloodRequestRepository.countByStatus(BloodRequestStatus.CLOSED))
-                .closedUnits(bloodRequestRepository.sumClosedUnitsByStatus(BloodRequestStatus.CLOSED))
+                .closedRequests(bloodRequestRepository.countByStatusIn(CLOSED_STATUSES))
+                .closedUnits(bloodRequestRepository.sumClosedUnitsByStatusIn(CLOSED_STATUSES))
                 .build();
     }
 
@@ -121,10 +125,9 @@ public class AdminBloodRequestService {
     @Transactional
     public BloodRequestDetailResponse close(Long bloodRequestId, String remarks, Long closedUnits, String actor) {
         BloodRequest request = requireRequest(bloodRequestId);
-        if (request.getStatus() == BloodRequestStatus.CLOSED) {
+        if (CLOSED_STATUSES.contains(request.getStatus())) {
             throw new BadRequestException("Request is already closed");
         }
-        request.setStatus(BloodRequestStatus.CLOSED);
         if (remarks != null) {
             request.setRemarks(remarks);
         }
@@ -139,9 +142,19 @@ public class AdminBloodRequestService {
             }
             request.setClosedUnits(closedUnits);
         }
+        // Partially closed when fewer units were fulfilled than required; otherwise fully closed.
+        request.setStatus(isPartiallyFulfilled(request)
+                ? BloodRequestStatus.PARTIALLY_CLOSED
+                : BloodRequestStatus.CLOSED);
         request.setModifiedAt(LocalDateTime.now());
         request.setModifiedBy(actor);
         return toDetail(request);
+    }
+
+    private boolean isPartiallyFulfilled(BloodRequest request) {
+        Long required = request.getRequiredUnits();
+        Long closed = request.getClosedUnits();
+        return required != null && closed != null && closed < required;
     }
 
     private BloodRequestDetailResponse toDetail(BloodRequest request) {

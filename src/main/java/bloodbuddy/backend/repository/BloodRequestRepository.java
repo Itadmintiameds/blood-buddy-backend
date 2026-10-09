@@ -34,6 +34,6 @@ public interface BloodRequestRepository extends JpaRepository<BloodRequest, Long
 
     long countByStatusIn(Collection<BloodRequestStatus> statuses);
 
-    @Query("SELECT COALESCE(SUM(r.closedUnits), 0) FROM BloodRequest r WHERE r.status = :status")
-    long sumClosedUnitsByStatus(BloodRequestStatus status);
+    @Query("SELECT COALESCE(SUM(r.closedUnits), 0) FROM BloodRequest r WHERE r.status IN :statuses")
+    long sumClosedUnitsByStatusIn(Collection<BloodRequestStatus> statuses);
 }

@@ -14,9 +14,9 @@ public class BloodRequestStatsResponse {
     /** Active requests still being worked (CENTRES_FOUND or NO_CENTRES_FOUND). */
     private final long openRequests;
 
-    /** Requests the admin has closed. */
+    /** Requests the admin has closed, fully or partially. */
     private final long closedRequests;
 
-    /** Total units fulfilled across all closed requests. */
+    /** Total units fulfilled across all closed (and partially closed) requests. */
     private final long closedUnits;
 }
