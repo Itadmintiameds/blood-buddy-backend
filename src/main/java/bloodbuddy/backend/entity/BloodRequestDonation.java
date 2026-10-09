@@ -1,16 +1,7 @@
 package bloodbuddy.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,16 +9,23 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/** Records a donor who agreed to and donated blood for a recipient's request. */
+/**
+ * Records a donor who agreed to and donated blood for a recipient's request.
+ */
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "blood_request_donation", indexes = {
-        @Index(name = "idx_brd_request", columnList = "blood_request_id"),
-        @Index(name = "idx_brd_donor", columnList = "blood_donor_details_id")
-})
+@Table(name = "blood_request_donation",
+        indexes = {
+                @Index(name = "idx_brd_request", columnList = "blood_request_id"),
+                @Index(name = "idx_brd_donor", columnList = "blood_donor_details_id")
+        },
+        // A donor can be recorded at most once per request.
+        uniqueConstraints = @UniqueConstraint(
+                name = "uq_brd_request_donor",
+                columnNames = {"blood_request_id", "blood_donor_details_id"}))
 public class BloodRequestDonation {
 
     @Id

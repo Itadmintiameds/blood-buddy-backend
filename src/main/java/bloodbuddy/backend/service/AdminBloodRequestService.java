@@ -96,12 +96,34 @@ public class AdminBloodRequestService {
         return toDetail(request);
     }
 
+    /**
+     * Minimum gap (days) between two donations by the same donor. Whole-blood donors must wait
+     * ~3 months before donating again; this also drives which donors are offered as candidates.
+     */
+    private static final int DONATION_ELIGIBILITY_GAP_DAYS = 90;
+
     /** Log a donor who agreed to and donated for this request. */
     @Transactional
     public BloodRequestDetailResponse recordDonation(Long bloodRequestId, Long bloodDonorDetailsId, String actor) {
         BloodRequest request = requireRequest(bloodRequestId);
         BloodDonorDetails donor = bloodDonorDetailsRepository.findById(bloodDonorDetailsId)
                 .orElseThrow(() -> new ResourceNotFoundException("Donor not found: " + bloodDonorDetailsId));
+
+        // Same donor cannot be recorded twice for one request.
+        if (bloodRequestDonationRepository
+                .existsByBloodRequest_BloodRequestIdAndBloodDonorDetails_BloodDonorDetailsId(
+                        bloodRequestId, bloodDonorDetailsId)) {
+            throw new BadRequestException("This donor is already recorded for this request");
+        }
+
+        // Enforce the eligibility gap: block if the donor donated within the last N days.
+        LocalDate today = LocalDate.now();
+        LocalDate lastDonation = donor.getLastBloodDonationDate();
+        if (lastDonation != null && lastDonation.isAfter(today.minusDays(DONATION_ELIGIBILITY_GAP_DAYS))) {
+            LocalDate nextEligible = lastDonation.plusDays(DONATION_ELIGIBILITY_GAP_DAYS);
+            throw new BadRequestException(
+                    "Donor last donated on " + lastDonation + " and is not eligible until " + nextEligible);
+        }
 
         LocalDateTime donatedAt = LocalDateTime.now();
 
@@ -171,13 +193,15 @@ public class AdminBloodRequestService {
                 .toList();
 
         // Only surface donor candidates when no centre matched; otherwise the centres are the answer.
+        LocalDate today = LocalDate.now();
         List<DonorResponse> donorCandidates = request.getStatus() == BloodRequestStatus.NO_CENTRES_FOUND
                 ? bloodDonorDetailsRepository.findCandidateDonors(
                         request.getBloodGroup().getBloodGroupId(),
                         request.getPincode(),
                         request.getCity(),
                         request.getDistrict(),
-                        LocalDate.now()).stream()
+                        today,
+                        today.minusDays(DONATION_ELIGIBILITY_GAP_DAYS)).stream()
                         .map(DonorMapper::toResponse)
                         .toList()
                 : List.of();

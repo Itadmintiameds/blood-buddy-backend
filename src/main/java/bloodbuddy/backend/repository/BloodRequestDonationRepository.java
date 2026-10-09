@@ -11,4 +11,8 @@ public interface BloodRequestDonationRepository extends JpaRepository<BloodReque
     // Eagerly fetch the donor (and its blood group) so response mapping doesn't trigger N+1 lazy loads.
     @EntityGraph(attributePaths = {"bloodDonorDetails", "bloodDonorDetails.bloodGroup"})
     List<BloodRequestDonation> findByBloodRequest_BloodRequestId(Long bloodRequestId);
+
+    // Guards against recording the same donor twice for one request.
+    boolean existsByBloodRequest_BloodRequestIdAndBloodDonorDetails_BloodDonorDetailsId(
+            Long bloodRequestId, Long bloodDonorDetailsId);
 }
