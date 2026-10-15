@@ -65,19 +65,25 @@ public class MatchingService {
             bloodRequestCentreRepository.save(match);
         }
 
+        // Hand off to the WhatsApp sender; the matched inventory carries per-centre units. The
+        // sender never throws, so its outcome is recorded on the single notification row below.
+        NotificationResult result = notificationService.sendCentreDetails(request, matches);
+
         // One notification per request (one message); the message lists every matched centre,
         // so no per-centre notification rows and no join table are needed.
         Notification notification = new Notification();
         notification.setBloodRequest(request);
         notification.setChannel("WHATSAPP");
         notification.setToMobile(request.getMobileNumber());
-        notification.setDeliveryStatus("PENDING");
+        notification.setDeliveryStatus(result.deliveryStatus());
+        notification.setProviderMessageId(result.providerMessageId());
+        notification.setFailureReason(result.failureReason());
+        if (result.isSent()) {
+            notification.setSentAt(now);
+        }
         notification.setCreatedAt(now);
         notification.setCreatedBy(SYSTEM_ACTOR);
         notificationRepository.save(notification);
-
-        // Actual send is deferred (stub); rows above are already persisted.
-        notificationService.sendCentreDetails(request, matchedCentres);
 
         return matchedCentres.size();
     }

@@ -1,15 +1,16 @@
 package bloodbuddy.backend.service;
 
-import bloodbuddy.backend.entity.BloodCentres;
 import bloodbuddy.backend.entity.BloodRequest;
+import bloodbuddy.backend.entity.Inventory;
 
 import java.util.List;
 
 /**
- * Integration point for delivering matched-centre details to a recipient.
- * The actual provider (WhatsApp) is out of scope for now; see the deferred stub.
+ * Integration point for delivering matched-centre details to a recipient over WhatsApp.
+ * The matched inventory rows carry both the centre and its available units, which the
+ * message renders per centre.
  */
 public interface NotificationService {
 
-    void sendCentreDetails(BloodRequest request, List<BloodCentres> matchedCentres);
+    NotificationResult sendCentreDetails(BloodRequest request, List<Inventory> matchedInventory);
 }

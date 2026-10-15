@@ -49,6 +49,13 @@ aws:
     secret-key: ${AWS_SECRET_KEY:dummy}
     region: ${AWS_REGION:ap-south-1}
     bucket-name: ${AWS_BUCKET_NAME:dummy}
+  whatsapp:
+    # AWS End User Messaging Social (WhatsApp) sender + approved template.
+    region: ${AWS_WHATSAPP_REGION:ap-south-1}
+    origination-phone-number-id: ${AWS_WHATSAPP_ORIGINATION_PHONE_NUMBER_ID:dummy}
+    template-name: ${AWS_WHATSAPP_TEMPLATE_NAME:dummy}
+    template-language: ${AWS_WHATSAPP_TEMPLATE_LANGUAGE:en}
+    meta-api-version: ${AWS_WHATSAPP_META_API_VERSION:v20.0}
 
 superadmin:
   email: ${SUPERADMIN_EMAIL}

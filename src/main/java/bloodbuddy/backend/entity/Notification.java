@@ -47,6 +47,14 @@ public class Notification {
     @Column(name = "delivery_status")
     private String deliveryStatus;
 
+    /** Provider (AWS/Meta) message id returned on a successful send; null otherwise. */
+    @Column(name = "provider_message_id")
+    private String providerMessageId;
+
+    /** Error detail when the send failed; null on success or when still pending. */
+    @Column(name = "failure_reason", length = 1000)
+    private String failureReason;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
