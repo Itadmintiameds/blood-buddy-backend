@@ -53,48 +53,16 @@ jobs:
           echo "Pushing Docker image..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # Step 7: Get current ECS task definition
-      - name: Download ECS Task Definition
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition blood-buddy-test-task \
-            --query taskDefinition \
-            > task-definition.json
-
-      # Step 8: Clean task definition
-      - name: Clean Task Definition
-        run: |
-          python - <<'PY'
-          import json
-
-          with open("task-definition.json") as f:
-              task = json.load(f)
-
-          for key in [
-              "taskDefinitionArn",
-              "revision",
-              "status",
-              "requiresAttributes",
-              "compatibilities",
-              "registeredAt",
-              "registeredBy"
-          ]:
-              task.pop(key, None)
-
-          with open("task-definition.json", "w") as f:
-              json.dump(task, f, indent=2)
-          PY
-
-      # Step 9: Update container image
+      # Step 7: Update ECS Task Definition (from the file checked into the repo)
       - name: Update ECS Task Definition
         id: update-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: task-definition.json
+          task-definition: deploy/blood-buddy-task-definition.json
           container-name: blood-buddy-backend
           image: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-      # Step 10: Deploy to ECS
+      # Step 8: Deploy to ECS
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
