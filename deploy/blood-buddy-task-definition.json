@@ -72,6 +72,22 @@
         {
           "name": "SUPERADMIN_PASSWORD",
           "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:SUPERADMIN_PASSWORD::"
+        },
+        {
+          "name": "AWS_WHATSAPP_REGION",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:AWS_WHATSAPP_REGION::"
+        },
+        {
+          "name": "AWS_WHATSAPP_ORIGINATION_PHONE_NUMBER_ID",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:AWS_WHATSAPP_ORIGINATION_PHONE_NUMBER_ID::"
+        },
+        {
+          "name": "AWS_WHATSAPP_TEMPLATE_NAME",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:AWS_WHATSAPP_TEMPLATE_NAME::"
+        },
+        {
+          "name": "AWS_WHATSAPP_TEMPLATE_LANGUAGE",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:AWS_WHATSAPP_TEMPLATE_LANGUAGE::"
         }
       ],
       "ulimits": [],
