@@ -39,6 +39,6 @@ public class BloodRequestSubmission {
     @NotBlank(message = "district is required")
     private String district;
 
-    @NotBlank(message = "pincode is required")
+    // Optional: matching falls back to city/district when it is absent.
     private String pincode;
 }
