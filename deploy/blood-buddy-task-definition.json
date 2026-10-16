@@ -88,6 +88,14 @@
         {
           "name": "AWS_WHATSAPP_TEMPLATE_LANGUAGE",
           "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:AWS_WHATSAPP_TEMPLATE_LANGUAGE::"
+        },
+        {
+          "name": "AWS_ACCESS_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:AWS_ACCESS_KEY::"
+        },
+        {
+          "name": "AWS_SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-south-1:977098986605:secret:blood-buddy-test-0DC4iq:AWS_SECRET_KEY::"
         }
       ],
       "ulimits": [],
