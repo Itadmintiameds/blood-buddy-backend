@@ -7,6 +7,7 @@ import bloodbuddy.backend.dto.request.BloodRequestDetailResponse;
 import bloodbuddy.backend.dto.request.BloodRequestFilterRequest;
 import bloodbuddy.backend.dto.request.BloodRequestStatsResponse;
 import bloodbuddy.backend.dto.request.BloodRequestSummaryResponse;
+import bloodbuddy.backend.dto.request.BloodRequestUpdateRequest;
 import bloodbuddy.backend.dto.request.CloseRequestRequest;
 import bloodbuddy.backend.dto.request.RecordDonationRequest;
 import bloodbuddy.backend.security.CustomUserDetails;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -68,6 +70,16 @@ public class AdminBloodRequestController {
             @PathVariable Long bloodRequestId) {
         return ResponseEntity.ok(ApiResponse.success("Blood request fetched",
                 adminBloodRequestService.getDetail(bloodRequestId)));
+    }
+
+    /** Edit the recipient details of a blood request. */
+    @PutMapping("/{bloodRequestId}")
+    public ResponseEntity<ApiResponse<BloodRequestDetailResponse>> updateRequest(
+            @PathVariable Long bloodRequestId,
+            @Valid @RequestBody BloodRequestUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Blood request updated",
+                adminBloodRequestService.update(bloodRequestId, request, principal.getUsername())));
     }
 
     @PostMapping("/{bloodRequestId}/donation")

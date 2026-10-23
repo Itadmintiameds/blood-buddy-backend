@@ -8,6 +8,7 @@ import bloodbuddy.backend.dto.donor.DonorFilterRequest;
 import bloodbuddy.backend.dto.donor.DonorLockRequest;
 import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.dto.donor.DonorStatsResponse;
+import bloodbuddy.backend.dto.donor.DonorUpdateRequest;
 import bloodbuddy.backend.security.CustomUserDetails;
 import bloodbuddy.backend.service.DonorService;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,6 +59,16 @@ public class AdminDonorController {
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<DonorStatsResponse>> stats() {
         return ResponseEntity.ok(ApiResponse.success("Stats fetched", donorService.getStats()));
+    }
+
+    /** Edit a donor's profile details. */
+    @PutMapping("/{donorId}")
+    public ResponseEntity<ApiResponse<DonorResponse>> updateDonor(
+            @PathVariable Long donorId,
+            @Valid @RequestBody DonorUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Donor updated",
+                donorService.updateDonor(donorId, request, principal.getUsername())));
     }
 
     /** Temporarily lock a donor for a date range (illness / out-of-station); auto-expires. */

@@ -8,6 +8,7 @@ import bloodbuddy.backend.dto.donor.DonorLockRequest;
 import bloodbuddy.backend.dto.donor.DonorRegistrationRequest;
 import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.dto.donor.DonorStatsResponse;
+import bloodbuddy.backend.dto.donor.DonorUpdateRequest;
 import bloodbuddy.backend.entity.BloodDonorDetails;
 import bloodbuddy.backend.entity.DonorStatus;
 import bloodbuddy.backend.entity.DonorUnavailabilityReason;
@@ -58,6 +59,28 @@ public class DonorService {
         donor.setStatus(DonorStatus.ACTIVE);
         donor.setCreatedAt(LocalDateTime.now());
         donor.setCreatedBy("SELF");
+
+        return DonorMapper.toResponse(bloodDonorDetailsRepository.save(donor));
+    }
+
+    /** Superadmin edit of a donor's profile fields (availability is managed separately). */
+    @Transactional
+    public DonorResponse updateDonor(Long donorId, DonorUpdateRequest request, String actor) {
+        BloodDonorDetails donor = requireDonor(donorId);
+        BloodGroup bloodGroup = bloodGroupRepository.findById(request.getBloodGroupId())
+                .orElseThrow(() -> new ResourceNotFoundException("Blood group not found: " + request.getBloodGroupId()));
+
+        donor.setFullName(request.getFullName());
+        donor.setMobileNumber(request.getMobileNumber());
+        donor.setAlternativeMobileNumber(request.getAlternativeMobileNumber());
+        donor.setBloodGroup(bloodGroup);
+        donor.setDob(request.getDob());
+        donor.setAddress(request.getAddress());
+        donor.setCity(request.getCity());
+        donor.setDistrict(request.getDistrict());
+        donor.setPincode(request.getPincode());
+        donor.setLastBloodDonationDate(request.getLastBloodDonationDate());
+        touch(donor, actor);
 
         return DonorMapper.toResponse(bloodDonorDetailsRepository.save(donor));
     }

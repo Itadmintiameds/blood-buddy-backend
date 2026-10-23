@@ -8,18 +8,22 @@ import bloodbuddy.backend.dto.request.BloodRequestDetailResponse;
 import bloodbuddy.backend.dto.request.BloodRequestFilterRequest;
 import bloodbuddy.backend.dto.request.BloodRequestStatsResponse;
 import bloodbuddy.backend.dto.request.BloodRequestSummaryResponse;
+import bloodbuddy.backend.dto.request.BloodRequestUpdateRequest;
 import bloodbuddy.backend.entity.BloodDonorDetails;
 import bloodbuddy.backend.entity.BloodRequest;
 import bloodbuddy.backend.entity.BloodRequestCentre;
 import bloodbuddy.backend.entity.BloodRequestDonation;
 import bloodbuddy.backend.entity.BloodRequestStatus;
 import bloodbuddy.backend.entity.masters.BloodComponents;
+import bloodbuddy.backend.entity.masters.BloodGroup;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
 import bloodbuddy.backend.mapper.BloodCentreMapper;
 import bloodbuddy.backend.mapper.BloodRequestMapper;
 import bloodbuddy.backend.mapper.DonorMapper;
+import bloodbuddy.backend.repository.BloodComponentsRepository;
 import bloodbuddy.backend.repository.BloodDonorDetailsRepository;
+import bloodbuddy.backend.repository.BloodGroupRepository;
 import bloodbuddy.backend.repository.BloodRequestCentreRepository;
 import bloodbuddy.backend.repository.BloodRequestDonationRepository;
 import bloodbuddy.backend.repository.BloodRequestRepository;
@@ -32,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /** Superadmin management of blood requests: list, drill-in, record donations, and close. */
 @Service
@@ -41,15 +46,24 @@ public class AdminBloodRequestService {
     private final BloodRequestCentreRepository bloodRequestCentreRepository;
     private final BloodRequestDonationRepository bloodRequestDonationRepository;
     private final BloodDonorDetailsRepository bloodDonorDetailsRepository;
+    private final BloodGroupRepository bloodGroupRepository;
+    private final BloodComponentsRepository bloodComponentsRepository;
+    private final MatchingService matchingService;
 
     public AdminBloodRequestService(BloodRequestRepository bloodRequestRepository,
                                     BloodRequestCentreRepository bloodRequestCentreRepository,
                                     BloodRequestDonationRepository bloodRequestDonationRepository,
-                                    BloodDonorDetailsRepository bloodDonorDetailsRepository) {
+                                    BloodDonorDetailsRepository bloodDonorDetailsRepository,
+                                    BloodGroupRepository bloodGroupRepository,
+                                    BloodComponentsRepository bloodComponentsRepository,
+                                    MatchingService matchingService) {
         this.bloodRequestRepository = bloodRequestRepository;
         this.bloodRequestCentreRepository = bloodRequestCentreRepository;
         this.bloodRequestDonationRepository = bloodRequestDonationRepository;
         this.bloodDonorDetailsRepository = bloodDonorDetailsRepository;
+        this.bloodGroupRepository = bloodGroupRepository;
+        this.bloodComponentsRepository = bloodComponentsRepository;
+        this.matchingService = matchingService;
     }
 
     @Transactional(readOnly = true)
@@ -148,6 +162,58 @@ public class AdminBloodRequestService {
         donor.setModifiedBy(actor);
         bloodDonorDetailsRepository.save(donor);
 
+        return toDetail(request);
+    }
+
+    /**
+     * Admin edits a request. When an open request's matching inputs (blood group, component, or
+     * location) change, its matched centres are recomputed and the recipient is sent the new
+     * centre details — the original match was for different blood or a different place.
+     * Closed (fully or partially) requests are final and cannot be edited; cancelled requests
+     * just store the new values.
+     */
+    @Transactional
+    public BloodRequestDetailResponse update(Long bloodRequestId, BloodRequestUpdateRequest update, String actor) {
+        BloodRequest request = requireRequest(bloodRequestId);
+        if (CLOSED_STATUSES.contains(request.getStatus())) {
+            throw new BadRequestException("A closed request cannot be edited");
+        }
+        BloodGroup bloodGroup = bloodGroupRepository.findById(update.getBloodGroupId())
+                .orElseThrow(() -> new ResourceNotFoundException("Blood group not found: " + update.getBloodGroupId()));
+        BloodComponents bloodComponent = bloodComponentsRepository.findById(update.getBloodComponentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Blood component not found: " + update.getBloodComponentId()));
+
+        boolean matchingInputsChanged =
+                !Objects.equals(request.getBloodGroup().getBloodGroupId(), bloodGroup.getBloodGroupId())
+                        || !Objects.equals(request.getBloodComponent().getBloodComponentId(),
+                                bloodComponent.getBloodComponentId())
+                        || !Objects.equals(request.getPincode(), update.getPincode())
+                        || !Objects.equals(request.getCity(), update.getCity())
+                        || !Objects.equals(request.getDistrict(), update.getDistrict());
+
+        request.setBloodGroup(bloodGroup);
+        request.setBloodComponent(bloodComponent);
+        request.setRecipientName(update.getRecipientName());
+        request.setMobileNumber(update.getMobileNumber());
+        request.setRequiredUnits(update.getRequiredUnits());
+        request.setAge(update.getAge());
+        request.setHospitalName(update.getHospitalName());
+        request.setAddress(update.getAddress());
+        request.setCity(update.getCity());
+        request.setDistrict(update.getDistrict());
+        request.setPincode(update.getPincode());
+        if (matchingInputsChanged && OPEN_STATUSES.contains(request.getStatus())) {
+            bloodRequestCentreRepository.deleteByBloodRequest_BloodRequestId(bloodRequestId);
+            // Flush the deletes first: Hibernate otherwise orders inserts before deletes, so a
+            // centre that matches again would be inserted alongside its stale row.
+            bloodRequestCentreRepository.flush();
+            int matchedCentres = matchingService.matchAndNotify(request);
+            request.setStatus(matchedCentres > 0
+                    ? BloodRequestStatus.CENTRES_FOUND
+                    : BloodRequestStatus.NO_CENTRES_FOUND);
+        }
+        request.setModifiedAt(LocalDateTime.now());
+        request.setModifiedBy(actor);
         return toDetail(request);
     }
 
