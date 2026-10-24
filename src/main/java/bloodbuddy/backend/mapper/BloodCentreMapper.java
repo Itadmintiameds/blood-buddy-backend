@@ -23,6 +23,8 @@ public final class BloodCentreMapper {
                 .latitude(centre.getLatitude())
                 .longitude(centre.getLongitude())
                 .locationUrl(centre.getLocationUrl())
+                .bloodCentreLicenceNumber(centre.getBloodCentreLicenceNumber())
+                .licenceExpiryDate(centre.getLicenceExpiryDate())
                 .isActive(centre.getIsActive())
                 .build();
     }

@@ -3,6 +3,8 @@ package bloodbuddy.backend.service;
 import bloodbuddy.backend.common.PagedResponse;
 import bloodbuddy.backend.constants.RoleNames;
 import bloodbuddy.backend.dto.centre.BloodCentreFilterRequest;
+import bloodbuddy.backend.dto.centre.BloodCentreProfileUpdateRequest;
+import bloodbuddy.backend.dto.centre.BloodCentreUpdateRequest;
 import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreRegistrationRequest;
 import bloodbuddy.backend.dto.centre.BloodCentreStatsResponse;
@@ -76,6 +78,48 @@ public class BloodCentreService {
                 .lowStockCentres(bloodCentresRepository.countLowStockActiveCentres(LOW_STOCK_THRESHOLD))
                 .totalBloodUnits(inventoryRepository.sumAvailableUnits())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public BloodCentreResponse getCentre(Long bloodCentreId) {
+        return BloodCentreMapper.toResponse(requireCentre(bloodCentreId));
+    }
+
+    /** Centre's own edit of its profile fields. */
+    @Transactional
+    public BloodCentreResponse updateProfile(Long bloodCentreId, BloodCentreProfileUpdateRequest request, String actor) {
+        BloodCentres centre = requireCentre(bloodCentreId);
+        applyProfile(centre, request, actor);
+        return BloodCentreMapper.toResponse(bloodCentresRepository.save(centre));
+    }
+
+    /** Superadmin edit of a centre: profile fields plus licence details. */
+    @Transactional
+    public BloodCentreResponse updateCentre(Long bloodCentreId, BloodCentreUpdateRequest request, String actor) {
+        BloodCentres centre = requireCentre(bloodCentreId);
+        centre.setBloodCentreLicenceNumber(request.getBloodCentreLicenceNumber());
+        centre.setLicenceExpiryDate(request.getLicenceExpiryDate());
+        applyProfile(centre, request, actor);
+        return BloodCentreMapper.toResponse(bloodCentresRepository.save(centre));
+    }
+
+    private void applyProfile(BloodCentres centre, BloodCentreProfileUpdateRequest request, String actor) {
+        centre.setBloodCentreName(request.getBloodCentreName());
+        centre.setMobileNumber(request.getMobileNumber());
+        centre.setAddress(request.getAddress());
+        centre.setDistrict(request.getDistrict());
+        centre.setCity(request.getCity());
+        centre.setPincode(request.getPincode());
+        centre.setLatitude(request.getLatitude());
+        centre.setLongitude(request.getLongitude());
+        centre.setLocationUrl(request.getLocationUrl());
+        centre.setModifiedAt(LocalDateTime.now());
+        centre.setModifiedBy(actor);
+    }
+
+    private BloodCentres requireCentre(Long bloodCentreId) {
+        return bloodCentresRepository.findById(bloodCentreId)
+                .orElseThrow(() -> new ResourceNotFoundException("Blood centre not found: " + bloodCentreId));
     }
 
     @Transactional

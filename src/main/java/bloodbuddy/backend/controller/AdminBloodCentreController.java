@@ -5,6 +5,7 @@ import bloodbuddy.backend.common.PagedResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreFilterRequest;
 import bloodbuddy.backend.dto.centre.BloodCentreResponse;
 import bloodbuddy.backend.dto.centre.BloodCentreStatsResponse;
+import bloodbuddy.backend.dto.centre.BloodCentreUpdateRequest;
 import bloodbuddy.backend.dto.common.LocationOptionsResponse;
 import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
 import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
@@ -60,6 +61,16 @@ public class AdminBloodCentreController {
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<BloodCentreStatsResponse>> stats() {
         return ResponseEntity.ok(ApiResponse.success("Stats fetched", bloodCentreService.getStats()));
+    }
+
+    /** Edit a centre's profile and licence details. */
+    @PutMapping("/{bloodCentreId}")
+    public ResponseEntity<ApiResponse<BloodCentreResponse>> updateCentre(
+            @PathVariable Long bloodCentreId,
+            @Valid @RequestBody BloodCentreUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Blood centre updated",
+                bloodCentreService.updateCentre(bloodCentreId, request, principal.getUsername())));
     }
 
     @GetMapping("/{bloodCentreId}/inventory")
