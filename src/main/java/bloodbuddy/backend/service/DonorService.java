@@ -10,9 +10,11 @@ import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.dto.donor.DonorStatsResponse;
 import bloodbuddy.backend.dto.donor.DonorUpdateRequest;
 import bloodbuddy.backend.entity.BloodDonorDetails;
+import bloodbuddy.backend.entity.ConsentForm;
 import bloodbuddy.backend.entity.DonorStatus;
 import bloodbuddy.backend.entity.DonorUnavailabilityReason;
 import bloodbuddy.backend.entity.masters.BloodGroup;
+import bloodbuddy.backend.enums.ConsentType;
 import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
 import bloodbuddy.backend.mapper.DonorMapper;
@@ -33,15 +35,19 @@ public class DonorService {
 
     private final BloodDonorDetailsRepository bloodDonorDetailsRepository;
     private final BloodGroupRepository bloodGroupRepository;
+    private final ConsentService consentService;
 
     public DonorService(BloodDonorDetailsRepository bloodDonorDetailsRepository,
-                        BloodGroupRepository bloodGroupRepository) {
+                        BloodGroupRepository bloodGroupRepository,
+                        ConsentService consentService) {
         this.bloodDonorDetailsRepository = bloodDonorDetailsRepository;
         this.bloodGroupRepository = bloodGroupRepository;
+        this.consentService = consentService;
     }
 
     @Transactional
     public DonorResponse register(DonorRegistrationRequest request) {
+        ConsentForm consentForm = consentService.requireAccepted(ConsentType.DONOR, request.getConsentVersion());
         BloodGroup bloodGroup = bloodGroupRepository.findById(request.getBloodGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Blood group not found: " + request.getBloodGroupId()));
 
@@ -57,6 +63,8 @@ public class DonorService {
         donor.setPincode(request.getPincode());
         donor.setLastBloodDonationDate(request.getLastBloodDonationDate());
         donor.setStatus(DonorStatus.ACTIVE);
+        donor.setConsentAcceptedAt(LocalDateTime.now());
+        donor.setConsentForm(consentForm);
         donor.setCreatedAt(LocalDateTime.now());
         donor.setCreatedBy("SELF");
 

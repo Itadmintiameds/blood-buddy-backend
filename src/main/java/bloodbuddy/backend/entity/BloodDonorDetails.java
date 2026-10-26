@@ -98,6 +98,16 @@ public class BloodDonorDetails {
     @Column(name = "locked_until")
     private LocalDate lockedUntil;
 
+    // When the person ticked the consent checkbox on the public form.
+    @Column(name = "consent_accepted_at")
+    private LocalDateTime consentAcceptedAt;
+
+    // The exact consent wording (type + version) the donor accepted.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "consent_form_id")
+    @JsonIgnore
+    private ConsentForm consentForm;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

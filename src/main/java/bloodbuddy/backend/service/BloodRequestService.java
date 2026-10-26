@@ -4,8 +4,10 @@ import bloodbuddy.backend.dto.request.BloodRequestResponse;
 import bloodbuddy.backend.dto.request.BloodRequestSubmission;
 import bloodbuddy.backend.entity.BloodRequest;
 import bloodbuddy.backend.entity.BloodRequestStatus;
+import bloodbuddy.backend.entity.ConsentForm;
 import bloodbuddy.backend.entity.masters.BloodComponents;
 import bloodbuddy.backend.entity.masters.BloodGroup;
+import bloodbuddy.backend.enums.ConsentType;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
 import bloodbuddy.backend.repository.BloodComponentsRepository;
 import bloodbuddy.backend.repository.BloodGroupRepository;
@@ -22,19 +24,23 @@ public class BloodRequestService {
     private final BloodGroupRepository bloodGroupRepository;
     private final BloodComponentsRepository bloodComponentsRepository;
     private final MatchingService matchingService;
+    private final ConsentService consentService;
 
     public BloodRequestService(BloodRequestRepository bloodRequestRepository,
                                BloodGroupRepository bloodGroupRepository,
                                BloodComponentsRepository bloodComponentsRepository,
-                               MatchingService matchingService) {
+                               MatchingService matchingService,
+                               ConsentService consentService) {
         this.bloodRequestRepository = bloodRequestRepository;
         this.bloodGroupRepository = bloodGroupRepository;
         this.bloodComponentsRepository = bloodComponentsRepository;
         this.matchingService = matchingService;
+        this.consentService = consentService;
     }
 
     @Transactional
     public BloodRequestResponse submit(BloodRequestSubmission submission) {
+        ConsentForm consentForm = consentService.requireAccepted(ConsentType.RECIPIENT, submission.getConsentVersion());
         BloodGroup bloodGroup = bloodGroupRepository.findById(submission.getBloodGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Blood group not found: " + submission.getBloodGroupId()));
         BloodComponents bloodComponent = bloodComponentsRepository.findById(submission.getBloodComponentId())
@@ -53,6 +59,8 @@ public class BloodRequestService {
         request.setCity(submission.getCity());
         request.setDistrict(submission.getDistrict());
         request.setPincode(submission.getPincode());
+        request.setConsentAcceptedAt(LocalDateTime.now());
+        request.setConsentForm(consentForm);
         request.setCreatedAt(LocalDateTime.now());
         request.setCreatedBy("PUBLIC");
         request = bloodRequestRepository.save(request);

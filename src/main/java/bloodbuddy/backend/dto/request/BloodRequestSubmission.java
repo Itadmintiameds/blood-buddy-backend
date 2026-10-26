@@ -1,8 +1,10 @@
 package bloodbuddy.backend.dto.request;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -41,4 +43,13 @@ public class BloodRequestSubmission {
 
     // Optional: matching falls back to city/district when it is absent.
     private String pincode;
+
+    // Consent checkbox on the form; the submission is rejected unless it is ticked.
+    @AssertTrue(message = "Consent must be accepted")
+    private boolean consentAccepted;
+
+    // Version of the consent text shown on the form (e.g. "v1"), so we know exactly what was agreed to.
+    @NotBlank(message = "Consent version is required")
+    @Size(max = 20)
+    private String consentVersion;
 }
