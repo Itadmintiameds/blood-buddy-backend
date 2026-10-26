@@ -33,7 +33,9 @@ import java.time.LocalDateTime;
         @Index(name = "idx_donor_district", columnList = "district"),
         @Index(name = "idx_donor_pincode", columnList = "pincode"),
         @Index(name = "idx_donor_last_donation", columnList = "last_blood_donation_date"),
-        @Index(name = "idx_donor_status", columnList = "status")
+        @Index(name = "idx_donor_status", columnList = "status"),
+        // Locked = lock window contains today; drives the locked KPI and the LOCKED filter.
+        @Index(name = "idx_donor_locked_until", columnList = "locked_until")
 })
 public class BloodDonorDetails {
 
@@ -88,7 +90,8 @@ public class BloodDonorDetails {
     @Column(name = "remarks")
     private String remarks;
 
-    // Lock window; the donor auto-reappears once lockedUntil has passed.
+    // Lock window; the donor is locked while today is within it and auto-reappears once
+    // lockedUntil has passed (status stays ACTIVE throughout).
     @Column(name = "locked_from")
     private LocalDate lockedFrom;
 

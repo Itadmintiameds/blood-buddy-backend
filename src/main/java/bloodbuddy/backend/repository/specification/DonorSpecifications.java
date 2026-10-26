@@ -1,5 +1,6 @@
 package bloodbuddy.backend.repository.specification;
 
+import bloodbuddy.backend.dto.donor.DonorAvailabilityStatus;
 import bloodbuddy.backend.dto.donor.DonorFilterRequest;
 import bloodbuddy.backend.entity.BloodDonorDetails;
 import bloodbuddy.backend.entity.DonorStatus;
@@ -34,26 +35,35 @@ public final class DonorSpecifications {
 
             List<Predicate> predicates = new ArrayList<>();
 
-            // Status: when the admin asks for specific statuses, match exactly those (lets them
-            // pull up LOCKED / DEACTIVATED donors to manage). Otherwise default to only currently
-            // available donors: not deactivated and not inside an active lock window.
+            // Status: LOCKED is derived from the lock window, not stored. A donor is locked when
+            // not deactivated and today falls within lockedFrom..lockedUntil; ACTIVE means not
+            // deactivated and not locked. Null status (old rows) is treated as ACTIVE.
+            LocalDate today = LocalDate.now();
+            Predicate notDeactivated = cb.or(
+                    cb.isNull(root.get("status")),
+                    cb.notEqual(root.get("status"), DonorStatus.DEACTIVATED));
+            Predicate inLockWindow = cb.and(
+                    cb.isNotNull(root.get("lockedUntil")),
+                    cb.greaterThanOrEqualTo(root.get("lockedUntil"), today),
+                    cb.or(cb.isNull(root.get("lockedFrom")),
+                            cb.lessThanOrEqualTo(root.get("lockedFrom"), today)));
+            Predicate locked = cb.and(notDeactivated, inLockWindow);
+            Predicate available = cb.and(notDeactivated, cb.not(inLockWindow));
+
+            // When the admin asks for specific statuses, match any of them (lets them pull up
+            // LOCKED / DEACTIVATED donors to manage). Otherwise default to available donors only.
             if (!CollectionUtils.isEmpty(filter.getStatuses())) {
-                Predicate statusMatch = root.get("status").in(filter.getStatuses());
-                // Old donors created before this feature have a null status; treat them as ACTIVE
-                // so they still appear when the admin filters for ACTIVE.
-                if (filter.getStatuses().contains(DonorStatus.ACTIVE)) {
-                    statusMatch = cb.or(statusMatch, cb.isNull(root.get("status")));
+                List<Predicate> statusMatches = new ArrayList<>();
+                for (DonorAvailabilityStatus status : filter.getStatuses()) {
+                    statusMatches.add(switch (status) {
+                        case ACTIVE -> available;
+                        case LOCKED -> locked;
+                        case DEACTIVATED -> cb.equal(root.get("status"), DonorStatus.DEACTIVATED);
+                    });
                 }
-                predicates.add(statusMatch);
+                predicates.add(cb.or(statusMatches.toArray(new Predicate[0])));
             } else {
-                Predicate active = cb.or(
-                        cb.isNull(root.get("status")),
-                        cb.equal(root.get("status"), DonorStatus.ACTIVE));
-                Predicate lockExpired = cb.and(
-                        cb.equal(root.get("status"), DonorStatus.LOCKED),
-                        cb.isNotNull(root.get("lockedUntil")),
-                        cb.lessThan(root.get("lockedUntil"), LocalDate.now()));
-                predicates.add(cb.or(active, lockExpired));
+                predicates.add(available);
             }
 
             if (!CollectionUtils.isEmpty(filter.getBloodGroupIds())) {

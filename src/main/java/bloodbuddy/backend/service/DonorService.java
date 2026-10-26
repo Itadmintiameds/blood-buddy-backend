@@ -86,8 +86,9 @@ public class DonorService {
     }
 
     /**
-     * Put a donor on a temporary lock-in period (illness / out-of-station). The donor drops
-     * off the admin and candidate lists and auto-reappears once {@code lockedUntil} passes.
+     * Put a donor on a temporary lock-in period (illness / out-of-station). Only the lock window
+     * is stored (status stays ACTIVE): the donor is off the admin and candidate lists while today
+     * is within it and auto-reappears once {@code lockedUntil} passes.
      */
     @Transactional
     public DonorResponse lockDonor(Long donorId, DonorLockRequest request, String actor) {
@@ -105,7 +106,7 @@ public class DonorService {
             throw new BadRequestException("lockedUntil cannot be before lockedFrom");
         }
 
-        donor.setStatus(DonorStatus.LOCKED);
+        donor.setStatus(DonorStatus.ACTIVE);
         donor.setUnavailabilityReason(request.getReason());
         donor.setLockedFrom(from);
         donor.setLockedUntil(until);
@@ -196,8 +197,7 @@ public class DonorService {
                 .distinctBloodGroupCount(bloodDonorDetailsRepository.countDistinctBloodGroups())
                 .recentDonationCount(
                         bloodDonorDetailsRepository.countByLastBloodDonationDateGreaterThanEqual(since))
-                .lockedDonors(bloodDonorDetailsRepository
-                        .countByStatusAndLockedUntilGreaterThanEqual(DonorStatus.LOCKED, today))
+                .lockedDonors(bloodDonorDetailsRepository.countLockedAsOf(today))
                 .deactivatedDonors(bloodDonorDetailsRepository.countByStatus(DonorStatus.DEACTIVATED))
                 .build();
     }

@@ -1,5 +1,6 @@
 package bloodbuddy.backend.mapper;
 
+import bloodbuddy.backend.dto.donor.DonorAvailabilityStatus;
 import bloodbuddy.backend.dto.donor.DonorResponse;
 import bloodbuddy.backend.entity.BloodDonorDetails;
 import bloodbuddy.backend.entity.DonorStatus;
@@ -27,27 +28,27 @@ public final class DonorMapper {
                 .pincode(donor.getPincode())
                 .lastBloodDonationDate(donor.getLastBloodDonationDate())
                 .createdAt(donor.getCreatedAt())
-                .status(donor.getStatus())
+                .status(availabilityStatus(donor))
                 .unavailabilityReason(donor.getUnavailabilityReason())
                 .remarks(donor.getRemarks())
                 .lockedFrom(donor.getLockedFrom())
                 .lockedUntil(donor.getLockedUntil())
-                .available(isAvailable(donor))
+                .available(availabilityStatus(donor) == DonorAvailabilityStatus.ACTIVE)
                 .build();
     }
 
     /**
-     * A donor is available when not deactivated and not inside an active lock window. Null
-     * status is treated as ACTIVE; a lock whose end date has passed counts as available.
+     * Effective status today: DEACTIVATED when deactivated, LOCKED when today falls inside the
+     * lock window, otherwise ACTIVE (null status is treated as ACTIVE).
      */
-    private static boolean isAvailable(BloodDonorDetails donor) {
-        DonorStatus status = donor.getStatus();
-        if (status == null || status == DonorStatus.ACTIVE) {
-            return true;
+    private static DonorAvailabilityStatus availabilityStatus(BloodDonorDetails donor) {
+        if (donor.getStatus() == DonorStatus.DEACTIVATED) {
+            return DonorAvailabilityStatus.DEACTIVATED;
         }
-        if (status == DonorStatus.LOCKED) {
-            return donor.getLockedUntil() != null && donor.getLockedUntil().isBefore(LocalDate.now());
-        }
-        return false;
+        LocalDate today = LocalDate.now();
+        boolean locked = donor.getLockedUntil() != null
+                && !donor.getLockedUntil().isBefore(today)
+                && (donor.getLockedFrom() == null || !donor.getLockedFrom().isAfter(today));
+        return locked ? DonorAvailabilityStatus.LOCKED : DonorAvailabilityStatus.ACTIVE;
     }
 }

@@ -7,7 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -28,17 +27,17 @@ public interface BloodDonorDetailsRepository extends JpaRepository<BloodDonorDet
 
     // Candidate donors for admin outreach: same blood group, located in the recipient's
     // pincode/city/district, currently available, and eligible to donate. Available means not
-    // deactivated and not inside an active lock window (a lock whose end date has passed counts
-    // as available). Eligible means they have never donated or last donated on or before the
+    // deactivated and today is outside the lock window (a lock that has ended or not yet
+    // started counts as available). Eligible means they have never donated or last donated on or before the
     // eligibility cut-off (today minus the minimum gap between donations). Ordered so the donors
     // who have gone longest without donating (never-donated first) come first, and the caller
     // caps the result with a Pageable limit.
     @Query("SELECT d FROM BloodDonorDetails d "
             + "WHERE d.bloodGroup.bloodGroupId = :bloodGroupId "
             + "AND (d.pincode = :pincode OR d.city = :city OR d.district = :district) "
-            + "AND (d.status IS NULL OR d.status = bloodbuddy.backend.entity.DonorStatus.ACTIVE "
-            + "     OR (d.status = bloodbuddy.backend.entity.DonorStatus.LOCKED "
-            + "         AND d.lockedUntil IS NOT NULL AND d.lockedUntil < :today)) "
+            + "AND (d.status IS NULL OR d.status = bloodbuddy.backend.entity.DonorStatus.ACTIVE) "
+            + "AND NOT (d.lockedUntil IS NOT NULL AND d.lockedUntil >= :today "
+            + "         AND (d.lockedFrom IS NULL OR d.lockedFrom <= :today)) "
             + "AND (d.lastBloodDonationDate IS NULL OR d.lastBloodDonationDate <= :eligibleOnOrBefore) "
             + "ORDER BY d.lastBloodDonationDate ASC NULLS FIRST")
     List<BloodDonorDetails> findCandidateDonors(@Param("bloodGroupId") Long bloodGroupId,
@@ -63,13 +62,10 @@ public interface BloodDonorDetailsRepository extends JpaRepository<BloodDonorDet
 
     long countByStatus(DonorStatus status);
 
-    // Donors inside an active lock window as of the given date (expired locks are excluded).
-    long countByStatusAndLockedUntilGreaterThanEqual(DonorStatus status, LocalDate asOf);
-
-    // One-time backfill: donors created before the availability feature have a null status.
-    // Marking them ACTIVE keeps the data consistent. Idempotent (updates nothing once done).
-    @Modifying
-    @Query("UPDATE BloodDonorDetails d SET d.status = bloodbuddy.backend.entity.DonorStatus.ACTIVE "
-            + "WHERE d.status IS NULL")
-    int markNullStatusActive();
+    // Donors currently locked: not deactivated and the given date falls inside the lock window.
+    @Query("SELECT COUNT(d) FROM BloodDonorDetails d "
+            + "WHERE (d.status IS NULL OR d.status <> bloodbuddy.backend.entity.DonorStatus.DEACTIVATED) "
+            + "AND d.lockedUntil IS NOT NULL AND d.lockedUntil >= :asOf "
+            + "AND (d.lockedFrom IS NULL OR d.lockedFrom <= :asOf)")
+    long countLockedAsOf(@Param("asOf") LocalDate asOf);
 }
