@@ -1,44 +1,106 @@
 package bloodbuddy.backend.controller;
 
 import bloodbuddy.backend.common.ApiResponse;
-import bloodbuddy.backend.dto.common.ConsentFormResponse;
-import bloodbuddy.backend.dto.request.BloodRequestResponse;
-import bloodbuddy.backend.dto.request.BloodRequestSubmission;
-import bloodbuddy.backend.enums.ConsentType;
-import bloodbuddy.backend.service.BloodRequestService;
-import bloodbuddy.backend.service.ConsentService;
+import bloodbuddy.backend.common.PagedResponse;
+import bloodbuddy.backend.dto.common.LocationOptionsResponse;
+import bloodbuddy.backend.dto.request.BloodRequestDetailResponse;
+import bloodbuddy.backend.dto.request.BloodRequestFilterRequest;
+import bloodbuddy.backend.dto.request.BloodRequestStatsResponse;
+import bloodbuddy.backend.dto.request.BloodRequestSummaryResponse;
+import bloodbuddy.backend.dto.request.BloodRequestUpdateRequest;
+import bloodbuddy.backend.dto.request.CloseRequestRequest;
+import bloodbuddy.backend.dto.request.RecordDonationRequest;
+import bloodbuddy.backend.security.CustomUserDetails;
+import bloodbuddy.backend.service.AdminBloodRequestService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
+/** Recipient blood request management; access is decided per role by @PreAuthorize (currently SUPERADMIN only). */
 @RestController
-@RequestMapping("/public/blood-requests")
+@RequestMapping("/blood-requests")
+@PreAuthorize("hasRole('SUPERADMIN')")
 public class BloodRequestController {
 
-    private final BloodRequestService bloodRequestService;
-    private final ConsentService consentService;
+    private final AdminBloodRequestService adminBloodRequestService;
 
-    public BloodRequestController(BloodRequestService bloodRequestService, ConsentService consentService) {
-        this.bloodRequestService = bloodRequestService;
-        this.consentService = consentService;
+    public BloodRequestController(AdminBloodRequestService adminBloodRequestService) {
+        this.adminBloodRequestService = adminBloodRequestService;
     }
 
-    /** Consent wording the request form must display; its version is sent back on submit. */
-    @GetMapping("/consent")
-    public ResponseEntity<ApiResponse<ConsentFormResponse>> consent() {
-        return ResponseEntity.ok(ApiResponse.success("Recipient consent form", consentService.getActive(ConsentType.RECIPIENT)));
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<BloodRequestSummaryResponse>>> listRequests() {
+        return ResponseEntity.ok(ApiResponse.success("Blood requests fetched",
+                adminBloodRequestService.listAll()));
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<BloodRequestResponse>> submit(
-            @Valid @RequestBody BloodRequestSubmission submission) {
-        BloodRequestResponse response = bloodRequestService.submit(submission);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Blood request submitted", response));
+    @GetMapping("/paginated")
+    public ResponseEntity<ApiResponse<PagedResponse<BloodRequestSummaryResponse>>> listRequestsPaginated(
+            @ModelAttribute BloodRequestFilterRequest filter, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success("Blood requests fetched",
+                adminBloodRequestService.list(filter, pageable)));
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<ApiResponse<LocationOptionsResponse>> locationOptions() {
+        return ResponseEntity.ok(ApiResponse.success("Location options fetched",
+                adminBloodRequestService.getLocationOptions()));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<BloodRequestStatsResponse>> stats() {
+        return ResponseEntity.ok(ApiResponse.success("Stats fetched", adminBloodRequestService.getStats()));
+    }
+
+    @GetMapping("/{bloodRequestId}")
+    public ResponseEntity<ApiResponse<BloodRequestDetailResponse>> requestDetail(
+            @PathVariable Long bloodRequestId) {
+        return ResponseEntity.ok(ApiResponse.success("Blood request fetched",
+                adminBloodRequestService.getDetail(bloodRequestId)));
+    }
+
+    /** Edit the recipient details of a blood request. */
+    @PutMapping("/{bloodRequestId}")
+    public ResponseEntity<ApiResponse<BloodRequestDetailResponse>> updateRequest(
+            @PathVariable Long bloodRequestId,
+            @Valid @RequestBody BloodRequestUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Blood request updated",
+                adminBloodRequestService.update(bloodRequestId, request, principal.getUsername())));
+    }
+
+    @PostMapping("/{bloodRequestId}/donation")
+    public ResponseEntity<ApiResponse<BloodRequestDetailResponse>> recordDonation(
+            @PathVariable Long bloodRequestId,
+            @Valid @RequestBody RecordDonationRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        BloodRequestDetailResponse response = adminBloodRequestService.recordDonation(
+                bloodRequestId, request.getBloodDonorDetailsId(), principal.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Donation recorded", response));
+    }
+
+    @PatchMapping("/{bloodRequestId}/close")
+    public ResponseEntity<ApiResponse<BloodRequestDetailResponse>> closeRequest(
+            @PathVariable Long bloodRequestId,
+            @RequestBody(required = false) CloseRequestRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        String remarks = request != null ? request.getRemarks() : null;
+        Long closedUnits = request != null ? request.getClosedUnits() : null;
+        BloodRequestDetailResponse response = adminBloodRequestService.close(
+                bloodRequestId, remarks, closedUnits, principal.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Request closed", response));
     }
 }

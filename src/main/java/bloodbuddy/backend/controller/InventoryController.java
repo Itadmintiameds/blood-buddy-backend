@@ -6,7 +6,6 @@ import bloodbuddy.backend.dto.inventory.AddAvailabilityRequest;
 import bloodbuddy.backend.dto.inventory.CentreInventoryResponse;
 import bloodbuddy.backend.dto.inventory.InventoryAuditResponse;
 import bloodbuddy.backend.dto.inventory.StockAdjustmentRequest;
-import bloodbuddy.backend.exception.BadRequestException;
 import bloodbuddy.backend.security.CustomUserDetails;
 import bloodbuddy.backend.service.InventoryService;
 import jakarta.validation.Valid;
@@ -21,11 +20,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Blood-centre staff manage their own centre's stock; the centre comes from the token.
- *  Superadmin operates on any centre via /admin/blood-centres/{id}/inventory/*. */
+/**
+ * Stock of one blood centre. SUPERADMIN may act on any centre; BLOOD_CENTRE staff only on
+ * their own, so the {bloodCentreId} in the path must match the centre in their token (else 403).
+ */
 @RestController
-@RequestMapping("/inventory")
-@PreAuthorize("hasRole('BLOOD_CENTRE')")
+@RequestMapping("/blood-centres/{bloodCentreId}/inventory")
+@PreAuthorize("hasRole('SUPERADMIN') or (hasRole('BLOOD_CENTRE') and #bloodCentreId == principal.bloodCentreId)")
 public class InventoryController {
 
     private final InventoryService inventoryService;
@@ -34,44 +35,37 @@ public class InventoryController {
         this.inventoryService = inventoryService;
     }
 
-    @PostMapping("/add-availability")
-    public ResponseEntity<ApiResponse<CentreInventoryResponse>> addAvailability(
-            @Valid @RequestBody AddAvailabilityRequest request,
-            @AuthenticationPrincipal CustomUserDetails principal) {
-        CentreInventoryResponse response = inventoryService.addAvailability(ownCentre(principal), request, principal.getUsername());
-        return ResponseEntity.ok(ApiResponse.success("Availability updated", response));
-    }
-
-    @PostMapping("/stock-adjustment")
-    public ResponseEntity<ApiResponse<CentreInventoryResponse>> adjustStock(
-            @Valid @RequestBody StockAdjustmentRequest request,
-            @AuthenticationPrincipal CustomUserDetails principal) {
-        CentreInventoryResponse response = inventoryService.adjustStock(ownCentre(principal), request, principal.getUsername());
-        return ResponseEntity.ok(ApiResponse.success("Stock adjusted", response));
-    }
-
     @GetMapping
-    public ResponseEntity<ApiResponse<CentreInventoryResponse>> listStock(
-            @AuthenticationPrincipal CustomUserDetails principal) {
-        return ResponseEntity.ok(ApiResponse.success("Stock fetched",
-                inventoryService.getCentreInventory(ownCentre(principal))));
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> listStock(@PathVariable Long bloodCentreId) {
+        return ResponseEntity.ok(ApiResponse.success("Inventory fetched",
+                inventoryService.getCentreInventory(bloodCentreId)));
     }
 
     /** Stock movement ledger for a single inventory row (newest first), paginated. */
     @GetMapping("/{inventoryId}/history")
     public ResponseEntity<ApiResponse<PagedResponse<InventoryAuditResponse>>> stockHistory(
+            @PathVariable Long bloodCentreId,
             @PathVariable Long inventoryId,
-            Pageable pageable,
-            @AuthenticationPrincipal CustomUserDetails principal) {
+            Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Stock history fetched",
-                inventoryService.getInventoryHistory(ownCentre(principal), inventoryId, pageable)));
+                inventoryService.getInventoryHistory(bloodCentreId, inventoryId, pageable)));
     }
 
-    // Staff may only touch their own centre; the centre id comes from the token, never the client.
-    private Long ownCentre(CustomUserDetails principal) {
-        if (principal.getBloodCentreId() == null) {
-            throw new BadRequestException("This account is not linked to a blood centre");
-        }
-        return principal.getBloodCentreId();
+    @PostMapping("/add-availability")
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> addAvailability(
+            @PathVariable Long bloodCentreId,
+            @Valid @RequestBody AddAvailabilityRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        CentreInventoryResponse response = inventoryService.addAvailability(bloodCentreId, request, principal.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Availability updated", response));
+    }
+
+    @PostMapping("/stock-adjustment")
+    public ResponseEntity<ApiResponse<CentreInventoryResponse>> adjustStock(
+            @PathVariable Long bloodCentreId,
+            @Valid @RequestBody StockAdjustmentRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        CentreInventoryResponse response = inventoryService.adjustStock(bloodCentreId, request, principal.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Stock adjusted", response));
     }
 }

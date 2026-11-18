@@ -22,7 +22,7 @@ public class BloodCentreResponse {
     private final Double longitude;
     private final String locationUrl;
     // Licence details: shown on the profile and pre-filled in the superadmin edit form
-    // (PUT /admin/blood-centres/{id} is a full replacement, so they must round-trip).
+    // (PUT /blood-centres/{id} is a full replacement, so they must round-trip).
     private final String bloodCentreLicenceNumber;
     private final LocalDate licenceExpiryDate;
     private final Boolean isActive;

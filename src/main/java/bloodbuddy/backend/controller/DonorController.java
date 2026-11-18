@@ -1,43 +1,102 @@
 package bloodbuddy.backend.controller;
 
 import bloodbuddy.backend.common.ApiResponse;
-import bloodbuddy.backend.dto.common.ConsentFormResponse;
-import bloodbuddy.backend.dto.donor.DonorRegistrationRequest;
+import bloodbuddy.backend.common.PagedResponse;
+import bloodbuddy.backend.dto.common.LocationOptionsResponse;
+import bloodbuddy.backend.dto.donor.DonorDeactivateRequest;
+import bloodbuddy.backend.dto.donor.DonorFilterRequest;
+import bloodbuddy.backend.dto.donor.DonorLockRequest;
 import bloodbuddy.backend.dto.donor.DonorResponse;
-import bloodbuddy.backend.enums.ConsentType;
-import bloodbuddy.backend.service.ConsentService;
+import bloodbuddy.backend.dto.donor.DonorStatsResponse;
+import bloodbuddy.backend.dto.donor.DonorUpdateRequest;
+import bloodbuddy.backend.security.CustomUserDetails;
 import bloodbuddy.backend.service.DonorService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
+/** Donor management; access is decided per role by @PreAuthorize (currently SUPERADMIN only). */
 @RestController
-@RequestMapping("/public/donors")
+@RequestMapping("/donors")
+@PreAuthorize("hasRole('SUPERADMIN')")
 public class DonorController {
 
     private final DonorService donorService;
-    private final ConsentService consentService;
 
-    public DonorController(DonorService donorService, ConsentService consentService) {
+    public DonorController(DonorService donorService) {
         this.donorService = donorService;
-        this.consentService = consentService;
     }
 
-    /** Consent wording the registration form must display; its version is sent back on register. */
-    @GetMapping("/consent")
-    public ResponseEntity<ApiResponse<ConsentFormResponse>> consent() {
-        return ResponseEntity.ok(ApiResponse.success("Donor consent form", consentService.getActive(ConsentType.DONOR)));
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<DonorResponse>>> listDonors() {
+        return ResponseEntity.ok(ApiResponse.success("Donors fetched", donorService.listAll()));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<DonorResponse>> register(@Valid @RequestBody DonorRegistrationRequest request) {
-        DonorResponse response = donorService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Donor registered successfully", response));
+    @GetMapping("/paginated")
+    public ResponseEntity<ApiResponse<PagedResponse<DonorResponse>>> listDonorsPaginated(
+            @ModelAttribute DonorFilterRequest filter, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success("Donors fetched", donorService.list(filter, pageable)));
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<ApiResponse<LocationOptionsResponse>> locationOptions() {
+        return ResponseEntity.ok(ApiResponse.success("Location options fetched",
+                donorService.getLocationOptions()));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<DonorStatsResponse>> stats() {
+        return ResponseEntity.ok(ApiResponse.success("Stats fetched", donorService.getStats()));
+    }
+
+    /** Edit a donor's profile details. */
+    @PutMapping("/{donorId}")
+    public ResponseEntity<ApiResponse<DonorResponse>> updateDonor(
+            @PathVariable Long donorId,
+            @Valid @RequestBody DonorUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Donor updated",
+                donorService.updateDonor(donorId, request, principal.getUsername())));
+    }
+
+    /** Temporarily lock a donor for a date range (illness / out-of-station); auto-expires. */
+    @PatchMapping("/{donorId}/lock")
+    public ResponseEntity<ApiResponse<DonorResponse>> lockDonor(
+            @PathVariable Long donorId,
+            @Valid @RequestBody DonorLockRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Donor locked",
+                donorService.lockDonor(donorId, request, principal.getUsername())));
+    }
+
+    /** Permanently deactivate a donor (medical grounds / deceased / relocated). */
+    @PatchMapping("/{donorId}/deactivate")
+    public ResponseEntity<ApiResponse<DonorResponse>> deactivateDonor(
+            @PathVariable Long donorId,
+            @Valid @RequestBody DonorDeactivateRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Donor deactivated",
+                donorService.deactivateDonor(donorId, request, principal.getUsername())));
+    }
+
+    /** Restore a donor to active, clearing any lock / deactivation. */
+    @PatchMapping("/{donorId}/reactivate")
+    public ResponseEntity<ApiResponse<DonorResponse>> reactivateDonor(
+            @PathVariable Long donorId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success("Donor reactivated",
+                donorService.reactivateDonor(donorId, principal.getUsername())));
     }
 }
