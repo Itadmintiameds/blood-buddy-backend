@@ -14,13 +14,16 @@ import bloodbuddy.backend.entity.ConsentForm;
 import bloodbuddy.backend.entity.DonorStatus;
 import bloodbuddy.backend.entity.DonorUnavailabilityReason;
 import bloodbuddy.backend.entity.masters.BloodGroup;
+import bloodbuddy.backend.enums.ConsentSource;
 import bloodbuddy.backend.enums.ConsentType;
 import bloodbuddy.backend.exception.BadRequestException;
+import bloodbuddy.backend.exception.ConflictException;
 import bloodbuddy.backend.exception.ResourceNotFoundException;
 import bloodbuddy.backend.mapper.DonorMapper;
 import bloodbuddy.backend.repository.BloodDonorDetailsRepository;
 import bloodbuddy.backend.repository.BloodGroupRepository;
 import bloodbuddy.backend.repository.specification.DonorSpecifications;
+import bloodbuddy.backend.util.MobileNumbers;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,11 +53,16 @@ public class DonorService {
         ConsentForm consentForm = consentService.requireAccepted(ConsentType.DONOR, request.getConsentVersion());
         BloodGroup bloodGroup = bloodGroupRepository.findById(request.getBloodGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Blood group not found: " + request.getBloodGroupId()));
+        String mobileNumber = requireMobile(request.getMobileNumber(), "mobileNumber");
+        String alternativeMobileNumber = optionalMobile(request.getAlternativeMobileNumber());
+        if (bloodDonorDetailsRepository.existsByMobileNumber(mobileNumber)) {
+            throw new ConflictException("A donor with this mobile number is already registered");
+        }
 
         BloodDonorDetails donor = new BloodDonorDetails();
         donor.setFullName(request.getFullName());
-        donor.setMobileNumber(request.getMobileNumber());
-        donor.setAlternativeMobileNumber(request.getAlternativeMobileNumber());
+        donor.setMobileNumber(mobileNumber);
+        donor.setAlternativeMobileNumber(alternativeMobileNumber);
         donor.setBloodGroup(bloodGroup);
         donor.setDob(request.getDob());
         donor.setAddress(request.getAddress());
@@ -65,6 +73,7 @@ public class DonorService {
         donor.setStatus(DonorStatus.ACTIVE);
         donor.setConsentAcceptedAt(LocalDateTime.now());
         donor.setConsentForm(consentForm);
+        donor.setConsentSource(ConsentSource.SELF);
         donor.setCreatedAt(LocalDateTime.now());
         donor.setCreatedBy("SELF");
 
@@ -77,10 +86,15 @@ public class DonorService {
         BloodDonorDetails donor = requireDonor(donorId);
         BloodGroup bloodGroup = bloodGroupRepository.findById(request.getBloodGroupId())
                 .orElseThrow(() -> new ResourceNotFoundException("Blood group not found: " + request.getBloodGroupId()));
+        String mobileNumber = requireMobile(request.getMobileNumber(), "mobileNumber");
+        String alternativeMobileNumber = optionalMobile(request.getAlternativeMobileNumber());
+        if (bloodDonorDetailsRepository.existsByMobileNumberAndBloodDonorDetailsIdNot(mobileNumber, donorId)) {
+            throw new ConflictException("Another donor is already registered with this mobile number");
+        }
 
         donor.setFullName(request.getFullName());
-        donor.setMobileNumber(request.getMobileNumber());
-        donor.setAlternativeMobileNumber(request.getAlternativeMobileNumber());
+        donor.setMobileNumber(mobileNumber);
+        donor.setAlternativeMobileNumber(alternativeMobileNumber);
         donor.setBloodGroup(bloodGroup);
         donor.setDob(request.getDob());
         donor.setAddress(request.getAddress());
@@ -159,6 +173,19 @@ public class DonorService {
         touch(donor, actor);
 
         return DonorMapper.toResponse(bloodDonorDetailsRepository.save(donor));
+    }
+
+    /** Canonical 10-digit form of a required mobile number; 400 when it isn't a valid Indian mobile. */
+    private static String requireMobile(String raw, String field) {
+        String mobile = MobileNumbers.normalize(raw);
+        if (mobile == null) {
+            throw new BadRequestException(field + " must be a valid 10-digit Indian mobile number");
+        }
+        return mobile;
+    }
+
+    private static String optionalMobile(String raw) {
+        return raw == null || raw.isBlank() ? null : requireMobile(raw, "alternativeMobileNumber");
     }
 
     private BloodDonorDetails requireDonor(Long donorId) {

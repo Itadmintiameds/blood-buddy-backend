@@ -1,6 +1,7 @@
 package bloodbuddy.backend.entity;
 
 import bloodbuddy.backend.entity.masters.BloodGroup;
+import bloodbuddy.backend.enums.ConsentSource;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -98,7 +99,8 @@ public class BloodDonorDetails {
     @Column(name = "locked_until")
     private LocalDate lockedUntil;
 
-    // When the person ticked the consent checkbox on the public form.
+    // When the person ticked the consent checkbox on the public form, or, for imported donors,
+    // when the superadmin attested the offline consent.
     @Column(name = "consent_accepted_at")
     private LocalDateTime consentAcceptedAt;
 
@@ -107,6 +109,11 @@ public class BloodDonorDetails {
     @JoinColumn(name = "consent_form_id")
     @JsonIgnore
     private ConsentForm consentForm;
+
+    // SELF for the public form, OFFLINE_IMPORT for superadmin CSV imports. Null on older rows means SELF.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "consent_source", length = 20)
+    private ConsentSource consentSource;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

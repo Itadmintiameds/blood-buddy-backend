@@ -5,6 +5,20 @@ spring:
   profiles:
     active: dev
 
+  # Insert staged donor import rows (sequence ids) in JDBC batches.
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+
+  # Donor CSV import uploads (see DonorImportService.MAX_ROWS for the row cap).
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
 server:
   port: 8080
   servlet:

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 public interface BloodDonorDetailsRepository extends JpaRepository<BloodDonorDetails, Long>,
@@ -47,6 +48,15 @@ public interface BloodDonorDetailsRepository extends JpaRepository<BloodDonorDet
                                                 @Param("today") LocalDate today,
                                                 @Param("eligibleOnOrBefore") LocalDate eligibleOnOrBefore,
                                                 Pageable pageable);
+
+    // Mobile numbers are stored in canonical form (see MobileNumbers), so exact matches find duplicates.
+    boolean existsByMobileNumber(String mobileNumber);
+
+    boolean existsByMobileNumberAndBloodDonorDetailsIdNot(String mobileNumber, Long donorId);
+
+    // [donorId, mobileNumber] pairs for the given numbers; duplicate detection during CSV import.
+    @Query("SELECT d.bloodDonorDetailsId, d.mobileNumber FROM BloodDonorDetails d WHERE d.mobileNumber IN :mobileNumbers")
+    List<Object[]> findIdAndMobileNumberByMobileNumberIn(@Param("mobileNumbers") Collection<String> mobileNumbers);
 
     @Query("SELECT DISTINCT d.city FROM BloodDonorDetails d WHERE d.city IS NOT NULL AND d.city <> '' ORDER BY d.city")
     List<String> findDistinctCities();
